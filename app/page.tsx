@@ -364,6 +364,14 @@ function NutrientRow({ icon, name, value, status }: {
 }
 
 // ─── メインコンポーネント ─────────────────────────────────
+type StatusKey = "ok" | "caution" | "ng";
+
+type JudgeResult = {
+  overall: StatusKey;
+  sodium: { value: number; status: StatusKey };
+  potassium: { value: number; status: StatusKey };
+  phosphorus: { value: number; status: StatusKey };
+};
 export default function Home() {
   const [tab,    setTab]    = useState(0);
   const [items,  setItems]  = useState<MealItem[]>([]);

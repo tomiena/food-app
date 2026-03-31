@@ -9,14 +9,14 @@ export function getMealHistory() { return []; }
 export function saveMealHistory(meal: any) {}
 export function deleteMealById(id: string) {}
 
-export function getDailyStatsFromHistory(date: string, history: any[]) {
-  return {};
+export function getMealsBeforeDateFromHistory(date: string, history: any[]) {
+  return history.filter((meal) => meal.date < date);
 }
 export function getRecentAverageFromHistory(days: number, history: any[]) {
   return {};
 }
 export function getMealsBeforeDateFromHistory(date: string, history: any[]) {
-  return [];
+  return history.filter((meal) => meal.date < date);
 }
 
 export function getLabRecords() { return []; }

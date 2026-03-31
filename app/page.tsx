@@ -707,7 +707,7 @@ export default function Home() {
         {/* ─── 日付選択 ─── */}
         <div style={{
           background: "#fff",
-          borderRadius: 14,
+borderRadius: 14,
           padding: "12px 16px",
           marginBottom: 14,
           boxShadow: "0 2px 8px rgba(0,0,0,0.06)",
@@ -762,7 +762,7 @@ export default function Home() {
         {items.length > 0 && (
           <div style={{
             background: "#fff",
-            borderRadius: 14,
+borderRadius: 14,
             padding: "18px 16px",
             marginBottom: 14,
             boxShadow: "0 2px 8px rgba(0,0,0,0.06)",
@@ -829,7 +829,7 @@ export default function Home() {
         {result && (
           <div id="result" ref={resultRef} style={{
             background: "#fff",
-            borderRadius: 14,
+borderRadius: 14,
             padding: "20px 16px",
             boxShadow: "0 2px 8px rgba(0,0,0,0.06)",
           }}>
@@ -933,7 +933,8 @@ export default function Home() {
 
           {/* 選択日の合計（履歴データから再計算） */}
           <div style={{
-            background: "#fff", borderRadius: 14,
+            background: "#fff",
+borderRadius: 14,
             padding: "16px", marginBottom: 12,
             boxShadow: "0 2px 8px rgba(0,0,0,0.06)",
           }}>
@@ -976,9 +977,10 @@ export default function Home() {
           </div>
 
           {/* 直近平均 */}
-          {(avg3.totalSalt > 0 || avg7.totalSalt > 0) && (
+          {((avg3 as any).totalSalt > 0 || (avg7 as any).totalSalt > 0)&& (
             <div style={{
-              background: "#fff", borderRadius: 14,
+              background: "#fff",
+borderRadius: 14,
               padding: "16px", marginBottom: 12,
               boxShadow: "0 2px 8px rgba(0,0,0,0.06)",
             }}>
@@ -1003,7 +1005,8 @@ export default function Home() {
 
           {/* 検査データ */}
           <div style={{
-            background: "#fff", borderRadius: 14,
+            background: "#fff",
+borderRadius: 14,
             padding: "16px", marginBottom: 12,
             boxShadow: "0 2px 8px rgba(0,0,0,0.06)",
           }}>

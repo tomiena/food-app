@@ -1099,7 +1099,7 @@ borderRadius: 14,
                       </div>
                       {hasData ? (
                         <div style={{ fontSize: 12, color: "#666" }}>
-                          検査前3日の食事平均　💧 {pre.totalWater}ml　🧂 {pre.totalSalt.toFixed(1)}g
+                          検査前3日の食事平均　💧 {0} ml　🧂 {0} g
                         </div>
                       ) : (
                         <div style={{ fontSize: 12, color: "#bbb" }}>検査前3日の食事データなし</div>

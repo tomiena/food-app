@@ -20,7 +20,15 @@ export function getMealsBeforeDateFromHistory(date: string, history: any[]) {
 }
 
 export function getLabRecords() { return []; }
-export function saveLabRecord() {}
+export function saveLabRecord(record: {
+  date: string
+  potassium: number
+  phosphorus: number
+}) {
+  const data = getLabRecords()
+  data.push(record)
+  localStorage.setItem("labRecords", JSON.stringify(data))
+}
 
 export type Meal = any;
 export type LabRecord = any;

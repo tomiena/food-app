@@ -15,7 +15,9 @@ export function getDailyStatsFromHistory(date: string, history: any[]) {
 export function getRecentAverageFromHistory(days: number, history: any[]) {
   return {};
 }
-export function getMealsBeforeDateFromHistory() { return []; }
+export function getMealsBeforeDateFromHistory(date: string, history: any[]) {
+  return [];
+}
 
 export function getLabRecords() { return []; }
 export function saveLabRecord() {}

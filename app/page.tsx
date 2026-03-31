@@ -5,15 +5,22 @@ import { FOODS, getFoodRisk } from "@/lib/foods";
 import { MealItem, judgeMeal } from "@/lib/judge";
 import { generateAdvice } from "@/lib/advice";
 import {
-  toDateStr, parseDateLocal,
-  getMealHistory, saveMealHistory, deleteMealById,
-  getDailyStatsFromHistory, getRecentAverageFromHistory, getMealsBeforeDateFromHistory,
-  getLabRecords, saveLabRecord,
-  type Meal, type LabRecord,
+  toDateStr,
+  parseDateLocal,
+  getMealHistory,
+  saveMealHistory,
+  deleteMealById,
+  getDailyStatsFromHistory,
+  getRecentAverageFromHistory,
+  getMealsBeforeDateFromHistory,
+  getLabRecords,
+  saveLabRecord,
+  type Meal,
+  type LabRecord,
 } from "@/lib/storage";
 
 // ─── 型定義 ──────────────────────────────────────────────
-type Portion  = { label: string; grams: number };
+type Portion = { label: string; grams: number };
 type FoodBtn  = { foodId: string; emoji: string; label: string; portions: Portion[] };
 type Category = { name: string; items: FoodBtn[]; warning?: string; showRiskLegend?: boolean };
 

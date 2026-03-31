@@ -996,8 +996,8 @@ borderRadius: 14,
                   }}
                 >
                   <span style={{ width: 70, fontSize: 13, color: "#888" }}>{label}</span>
-                  <span style={{ flex: 1, fontSize: 14, color: "#1565c0" }}>💧 {data.totalWater}ml</span>
-                  <span style={{ flex: 1, fontSize: 14, color: "#5c3d1e" }}>🧂 {data.totalSalt.toFixed(1)}g</span>
+                  <span style={{ flex: 1, fontSize: 14, color: "#1565c0" }}>💧 {(data as any).totalWater}ml</span>
+                  <span style={{ flex: 1, fontSize: 14, color: "#5c3d1e" }}>🧂 {(data as any).totalSalt.toFixed(1)}g</span>
                 </div>
               ))}
             </div>

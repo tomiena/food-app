@@ -1,3 +1,3 @@
-export function generateAdvice() {
-  return "OKです";
+export function generateAdvice(result: any) {
+  return "";
 }

@@ -835,11 +835,16 @@ export default function Home() {
   padding: "18px",
   borderRadius: 12,
   marginBottom: 18,
-  background: STATUS[result.overall].bg,
-  border: `2px solid ${STATUS[result.overall].border}`,
+  background: STATUS[result.overall as StatusKey].bg,
+  border: `2px solid ${STATUS[result.overall as StatusKey].border}`,
 }}>
-              <div style={{ fontSize: 44 }}>{STATUS[result.overall].icon}</div>
-              <div style={{ fontSize: 21, fontWeight: "bold", color: STATUS[result.overall].text, marginTop: 6 }}>
+              <div style={{ fontSize: 44 }}>{STATUS[result.overall as StatusKey].icon}</div>
+              <div style={{ 
+  fontSize: 21, 
+  fontWeight: "bold", 
+  color: STATUS[result.overall as StatusKey].text, 
+  marginTop: 6 
+}}>
                 {result.overall === "ok"
                   ? "この食事はOKです！"
                   : result.overall === "caution"

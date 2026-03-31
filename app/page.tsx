@@ -834,8 +834,8 @@ export default function Home() {
   textAlign: "center",
   padding: "18px",
   borderRadius: 12,
-  marginBottom: 18,
-  background: STATUS[result.overall as StatusKey].bg,
+marginBottom: 18,
+background: STATUS[result.overall as StatusKey].bg,
   border: `2px solid ${STATUS[result.overall as StatusKey].border}`,
 }}>
               <div style={{ fontSize: 44 }}>{STATUS[result.overall as StatusKey].icon}</div>

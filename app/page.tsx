@@ -459,7 +459,7 @@ export default function Home() {
     if (!isPremium && selectedDateMealCount >= 3) {
       setShowLimitModal(true);
     } else {
-      // 新形式で保存（items: Food[]、amount は含まない）
+      // 新形式で保存（items: Food[],amount は含まない）
       saveMealHistory({
         date: selectedDate,
         items: items.map((i) => i.food),

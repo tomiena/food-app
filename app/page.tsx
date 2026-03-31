@@ -369,8 +369,8 @@ type StatusKey = "ok" | "caution" | "ng";
 type JudgeResult = {
   overall: StatusKey;
   sodium: { value: number; status: StatusKey };
-  potassium: { value: number; status: StatusKey };
-  phosphorus: { value: number; status: StatusKey };
+  potassium: { value: number };
+phosphorus: { value: number };
 };
 export default function Home() {
   const [tab,    setTab]    = useState(0);

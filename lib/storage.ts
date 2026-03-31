@@ -7,7 +7,7 @@ export function parseDateLocal(dateStr: string) {
 
 export function getMealHistory() { return []; }
 export function saveMealHistory(meal: any) {}
-export function deleteMealById() {}
+export function deleteMealById(id: string) {}
 
 export function getDailyStatsFromHistory(date: string, history: any[]) {
   return {};

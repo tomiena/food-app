@@ -402,7 +402,7 @@ export default function Home() {
 
   // ─ 派生計算（mealHistoryから算出） ─
   const todayStats = getDailyStatsFromHistory(selectedDate, mealHistory);
-  getMealsBeforeDateFromHistory(selectedDate, 3)
+  const avg3 = getMealsBeforeDateFromHistory(selectedDate, mealHistory)
   const avg7       = getRecentAverageFromHistory(7, mealHistory);
 
   // ─ トースト ─

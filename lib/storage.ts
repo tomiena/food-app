@@ -96,7 +96,7 @@ export function saveLabRecord(record: LabRecord) {
 export type Meal = {
   id: string;
   date: string;
-  items: { name: string }[];
+  items: { name: string; foodId?: string; amount?: number }[];
   total: {
     water: number;
     salt: number;

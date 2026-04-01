@@ -211,7 +211,7 @@ function formatDateLabel(dateStr: string, todayStr: string): string {
 }
 
 // ─── FoodButton ───────────────────────────────────────────
-function FoodButton({ btn, onTap }: { btn: FoodBtn; onTap: () => void }) {
+function FoodButton({ btn, onTap, disabled }: { btn: FoodBtn; onTap: () => void; disabled?: boolean }) {
   const food = FOODS.find((f) => f.id === btn.foodId);
   const risk = food ? getFoodRisk(food) : { sodium: false, potassium: false };
   const [pressed, setPressed] = useState(false);
@@ -225,17 +225,17 @@ function FoodButton({ btn, onTap }: { btn: FoodBtn; onTap: () => void }) {
 
   return (
     <button
-      onPointerDown={() => setPressed(true)}
+      onPointerDown={() => !disabled && setPressed(true)}
       onPointerUp={() => setPressed(false)}
       onPointerLeave={() => setPressed(false)}
-      onClick={onTap}
+      onClick={disabled ? undefined : onTap}
       style={{
         position: "relative",
         background: "#fff",
         border: `2px solid ${borderColor}`,
         borderRadius: 14,
         padding: "16px 8px 12px",
-        cursor: "pointer",
+        cursor: disabled ? "default" : "pointer",
         display: "flex",
         flexDirection: "column",
         alignItems: "center",
@@ -246,6 +246,7 @@ function FoodButton({ btn, onTap }: { btn: FoodBtn; onTap: () => void }) {
         WebkitTapHighlightColor: "transparent",
         fontFamily: FONT,
         width: "100%",
+        opacity: disabled ? 0.45 : 1,
       }}
     >
       {riskBadge && (
@@ -591,6 +592,41 @@ function CalendarPicker({
   );
 }
 
+// ─── 旧データ移行（nutrient 0 → 再計算） ─────────────────
+function migrateMeal(meal: Meal): Meal {
+  // If any nutrient is non-zero the meal already has real data
+  if (
+    meal.total.water > 0 ||
+    meal.total.salt > 0 ||
+    meal.total.potassium > 0 ||
+    meal.total.phosphorus > 0
+  ) return meal;
+
+  // Recompute from stored items (foodId + amount preferred; name + 100g fallback)
+  let water = 0, sodium = 0, potassium = 0, phosphorus = 0;
+  for (const item of meal.items) {
+    const food = item.foodId
+      ? FOODS.find((f) => f.id === item.foodId)
+      : FOODS.find((f) => f.name === item.name);
+    const amount = item.amount ?? 100;
+    if (food) {
+      water      += food.water      * amount / 100;
+      sodium     += food.sodium     * amount / 100;
+      potassium  += food.potassium  * amount / 100;
+      phosphorus += food.phosphorus * amount / 100;
+    }
+  }
+  return {
+    ...meal,
+    total: {
+      water:      Math.round(water),
+      salt:       Math.round(sodium * 2.54 / 1000 * 10) / 10,
+      potassium:  Math.round(potassium),
+      phosphorus: Math.round(phosphorus),
+    },
+  };
+}
+
 // ─── メインコンポーネント ─────────────────────────────────
 type StatusKey = "ok" | "caution" | "ng";
 
@@ -626,7 +662,7 @@ export default function Home() {
 
   // ─ 初回ロード ─
   function loadData() {
-    setMealHistory(getMealHistory());
+    setMealHistory(getMealHistory().map(migrateMeal));
     setLabRecords(getLabRecords().slice().reverse());
   }
   useEffect(() => { loadData(); }, []);
@@ -644,7 +680,7 @@ export default function Home() {
 
   // ─ 食品追加 ─
   const handlePortionSelect = (grams: number, portionLabel: string) => {
-    if (!picker) return;
+    if (!picker || isInputLocked) return;
     const food = FOODS.find((f) => f.id === picker.foodId) ?? {
       id: picker.foodId,
       name: picker.label,
@@ -690,6 +726,8 @@ export default function Home() {
 
   // 有料かどうか
   const isPremium = subscriptionStatus === "active";
+  // 無料ユーザーが過去日を選択している場合は入力ロック
+  const isInputLocked = !isPremium && selectedDate !== today;
   // 選択日の保存済み食事数（無料制限チェック用）
   const selectedDateMealCount = todayStats.mealCount;
 
@@ -707,7 +745,7 @@ export default function Home() {
     if (willSave) {
       saveMealHistory({
         date: selectedDate,
-        items: items.map((i) => ({ name: i.food.name })),
+        items: items.map((i) => ({ name: i.food.name, foodId: i.food.id, amount: i.amount })),
         total: {
           water:      totalWater,
           salt:       totalSalt,
@@ -717,7 +755,7 @@ export default function Home() {
         overall: r.overall,
         advice:  adviceText,
       });
-      setMealHistory(getMealHistory());
+      setMealHistory(getMealHistory().map(migrateMeal));
     }
     setMealSavedForCurrentJudge(willSave);
     setTimeout(() => {
@@ -728,7 +766,7 @@ export default function Home() {
   // ─ 履歴削除 ─
   const handleDeleteMeal = (id: string) => {
     deleteMealById(id);
-    setMealHistory((prev) => prev.filter((m) => m.id !== id));
+    setMealHistory((prev) => prev.filter((m) => m.id !== id).map(migrateMeal));
   };
 
   // ─ 水分・塩分ステータス ─
@@ -946,9 +984,46 @@ export default function Home() {
         {/* 食品ボタングリッド */}
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 20 }}>
           {cat.items.map((btn, i) => (
-            <FoodButton key={`${btn.foodId}-${i}`} btn={btn} onTap={() => setPicker(btn)} />
+            <FoodButton key={`${btn.foodId}-${i}`} btn={btn} onTap={() => setPicker(btn)} disabled={isInputLocked} />
           ))}
         </div>
+
+        {/* 過去日ロックバナー（無料ユーザー） */}
+        {isInputLocked && (
+          <div style={{
+            marginBottom: 14,
+            padding: "16px",
+            background: "#f8f4ff",
+            border: "1.5px solid #ce93d8",
+            borderRadius: 12,
+            textAlign: "center",
+          }}>
+            <div style={{ fontSize: 22, marginBottom: 6 }}>🔒</div>
+            <p style={{ fontSize: 14, color: "#6a1b9a", fontWeight: "bold", margin: "0 0 4px", lineHeight: 1.6 }}>
+              過去日の記録は有料プランでご利用いただけます。
+            </p>
+            <p style={{ fontSize: 13, color: "#8e24aa", margin: "0 0 14px", lineHeight: 1.6 }}>
+              継続的な振り返りに役立ちます。
+            </p>
+            <button
+              onClick={async () => {
+                try {
+                  const res = await fetch("/api/checkout", { method: "POST" });
+                  const data = await res.json();
+                  if (data.url) window.location.href = data.url;
+                  else showToast("決済の準備に失敗しました");
+                } catch { showToast("決済の準備に失敗しました"); }
+              }}
+              style={{
+                padding: "10px 24px", fontSize: 14, fontWeight: "bold",
+                background: "#8e24aa", color: "#fff",
+                border: "none", borderRadius: 8, cursor: "pointer", fontFamily: FONT,
+              }}
+            >
+              有料プランを見る
+            </button>
+          </div>
+        )}
 
         {/* ─── カレンダー（日付選択） ─── */}
         <CalendarPicker

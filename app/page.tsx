@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import { FOODS, getFoodRisk } from "@/lib/foods";
 import { MealItem, judgeMeal } from "@/lib/judge";
 import { generateAdvice, generateProfessionalAdvice } from "@/lib/advice";
@@ -369,6 +369,228 @@ function NutrientRow({ icon, name, value, status }: {
   );
 }
 
+// ─── PastHistoryList ──────────────────────────────────────
+function PastHistoryList({
+  sortedDates,
+  historyByDate,
+  today,
+  onSelectDate,
+}: {
+  sortedDates: string[];
+  historyByDate: Record<string, Meal[]>;
+  today: string;
+  onSelectDate: (date: string) => void;
+}) {
+  const [open, setOpen] = useState(false);
+  return (
+    <div style={{ marginTop: 24 }}>
+      <button
+        onClick={() => setOpen((v) => !v)}
+        style={{
+          width: "100%", display: "flex", justifyContent: "space-between", alignItems: "center",
+          background: "#fff", border: "1px solid #f0e8d8", borderRadius: 12,
+          padding: "12px 16px", cursor: "pointer", fontFamily: FONT,
+          boxShadow: "0 1px 4px rgba(0,0,0,0.05)",
+        }}
+      >
+        <span style={{ fontSize: 13, fontWeight: "bold", color: "#5c3d1e" }}>
+          📋 過去の食事履歴（{sortedDates.length}日分）
+        </span>
+        <span style={{ fontSize: 16, color: "#bbb" }}>{open ? "▲" : "▼"}</span>
+      </button>
+      {open && (
+        <div style={{ marginTop: 8 }}>
+          {sortedDates.map((dateStr) => {
+            const meals = historyByDate[dateStr];
+            const totalK = meals.reduce((s, m) => s + (m.total.potassium ?? 0), 0);
+            const totalP = meals.reduce((s, m) => s + (m.total.phosphorus ?? 0), 0);
+            const totalW = meals.reduce((s, m) => s + (m.total.water ?? 0), 0);
+            const totalS = meals.reduce((s, m) => s + (m.total.salt ?? 0), 0);
+            const overalls = meals.map(m => m.overall).filter(Boolean);
+            const worstOverall = overalls.includes("ng") ? "ng" : overalls.includes("caution") ? "caution" : overalls.length > 0 ? "ok" : null;
+            return (
+              <button
+                key={dateStr}
+                onClick={() => onSelectDate(dateStr)}
+                style={{
+                  width: "100%", textAlign: "left", background: "#fff",
+                  border: "1px solid #f0e8d8", borderRadius: 10,
+                  padding: "12px 14px", marginBottom: 6, cursor: "pointer",
+                  fontFamily: FONT, boxShadow: "0 1px 4px rgba(0,0,0,0.04)",
+                }}
+              >
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                  <span style={{ fontSize: 13, fontWeight: "bold", color: "#5c3d1e" }}>
+                    {formatDateLabel(dateStr, today)}
+                  </span>
+                  <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                    {worstOverall && (
+                      <span style={{
+                        fontSize: 11, fontWeight: "bold", padding: "2px 6px", borderRadius: 5,
+                        color: STATUS[worstOverall as StatusKey].text,
+                        background: STATUS[worstOverall as StatusKey].bg,
+                        border: `1px solid ${STATUS[worstOverall as StatusKey].border}`,
+                      }}>
+                        {STATUS[worstOverall as StatusKey].icon}
+                      </span>
+                    )}
+                    <span style={{ fontSize: 11, color: "#bbb" }}>{meals.length}食 ›</span>
+                  </div>
+                </div>
+                <div style={{ display: "flex", gap: 10, marginTop: 5, flexWrap: "wrap" }}>
+                  <span style={{ fontSize: 11, color: "#1565c0" }}>💧 {totalW}ml</span>
+                  <span style={{ fontSize: 11, color: "#5c3d1e" }}>🧂 {totalS.toFixed(1)}g</span>
+                  <span style={{ fontSize: 11, color: totalK > 1650 ? "#e65100" : "#388e3c" }}>K {totalK}mg</span>
+                  <span style={{ fontSize: 11, color: totalP > 660 ? "#e65100" : "#7b1fa2" }}>P {totalP}mg</span>
+                </div>
+              </button>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ─── CalendarPicker ───────────────────────────────────────
+function CalendarPicker({
+  selectedDate,
+  today,
+  mealHistory,
+  labRecords,
+  onSelectDate,
+}: {
+  selectedDate: string;
+  today: string;
+  mealHistory: Meal[];
+  labRecords: LabRecord[];
+  onSelectDate: (date: string) => void;
+}) {
+  const selectedYM = selectedDate.slice(0, 7);
+  const [viewYear,  setViewYear]  = useState(() => parseInt(selectedDate.slice(0, 4)));
+  const [viewMonth, setViewMonth] = useState(() => parseInt(selectedDate.slice(5, 7)) - 1);
+
+  // Sync calendar view when selected date's month changes externally
+  useEffect(() => {
+    setViewYear(parseInt(selectedYM.slice(0, 4)));
+    setViewMonth(parseInt(selectedYM.slice(5, 7)) - 1);
+  }, [selectedYM]);
+
+  const mealDates = useMemo(() => new Set(mealHistory.map((m) => m.date)), [mealHistory]);
+  const labDates  = useMemo(() => new Set(labRecords.map((l) => l.date)),  [labRecords]);
+
+  const todayY = parseInt(today.slice(0, 4));
+  const todayM = parseInt(today.slice(5, 7)) - 1;
+  const canGoNext = viewYear < todayY || (viewYear === todayY && viewMonth < todayM);
+
+  const goBack = () => {
+    if (viewMonth === 0) { setViewMonth(11); setViewYear((y) => y - 1); }
+    else setViewMonth((m) => m - 1);
+  };
+  const goNext = () => {
+    if (!canGoNext) return;
+    if (viewMonth === 11) { setViewMonth(0); setViewYear((y) => y + 1); }
+    else setViewMonth((m) => m + 1);
+  };
+
+  const firstDow    = new Date(viewYear, viewMonth, 1).getDay();
+  const daysInMonth = new Date(viewYear, viewMonth + 1, 0).getDate();
+  const cells: (number | null)[] = [];
+  for (let i = 0; i < firstDow; i++) cells.push(null);
+  for (let d = 1; d <= daysInMonth; d++) cells.push(d);
+  while (cells.length % 7 !== 0) cells.push(null);
+
+  return (
+    <div style={{ background: "#fff", borderRadius: 14, padding: "14px 12px", marginBottom: 14, boxShadow: "0 2px 8px rgba(0,0,0,0.06)" }}>
+      {/* Month navigation */}
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
+        <button
+          onClick={goBack}
+          style={{ width: 34, height: 34, border: "1.5px solid #e8ddd0", borderRadius: 8, background: "#fdf8f0", cursor: "pointer", fontSize: 20, color: "#c17a3a", fontFamily: FONT, lineHeight: 1 }}
+        >‹</button>
+        <span style={{ fontSize: 15, fontWeight: "bold", color: "#3d2010", fontFamily: FONT }}>
+          {viewYear}年{viewMonth + 1}月
+        </span>
+        <button
+          onClick={goNext}
+          disabled={!canGoNext}
+          style={{ width: 34, height: 34, border: "1.5px solid #e8ddd0", borderRadius: 8, background: canGoNext ? "#fdf8f0" : "#f5f0ea", cursor: canGoNext ? "pointer" : "default", fontSize: 20, color: canGoNext ? "#c17a3a" : "#ddd", fontFamily: FONT, lineHeight: 1 }}
+        >›</button>
+      </div>
+      {/* Day-of-week headers */}
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: 2, marginBottom: 2 }}>
+        {["日","月","火","水","木","金","土"].map((d, i) => (
+          <div key={d} style={{ textAlign: "center", fontSize: 11, color: i === 0 ? "#e57373" : i === 6 ? "#64b5f6" : "#aaa", paddingBottom: 3 }}>{d}</div>
+        ))}
+      </div>
+      {/* Date cells */}
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: 2 }}>
+        {cells.map((day, i) => {
+          if (!day) return <div key={`e-${i}`} style={{ height: 44 }} />;
+          const mm      = String(viewMonth + 1).padStart(2, "0");
+          const dd      = String(day).padStart(2, "0");
+          const dateStr = `${viewYear}-${mm}-${dd}`;
+          const isToday    = dateStr === today;
+          const isSelected = dateStr === selectedDate;
+          const isFuture   = dateStr > today;
+          const hasMeal    = mealDates.has(dateStr);
+          const hasLab     = labDates.has(dateStr);
+          const dow = (firstDow + day - 1) % 7;
+          return (
+            <button
+              key={dateStr}
+              onClick={() => !isFuture && onSelectDate(dateStr)}
+              disabled={isFuture}
+              style={{
+                height: 44, padding: 0,
+                display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 2,
+                background: isSelected ? "#c17a3a" : isToday ? "#fdf5eb" : "transparent",
+                border: isSelected ? "none" : isToday ? "1.5px solid #c17a3a" : "none",
+                borderRadius: 8,
+                cursor: isFuture ? "default" : "pointer",
+                opacity: isFuture ? 0.25 : 1,
+                fontFamily: FONT,
+                WebkitTapHighlightColor: "transparent",
+              }}
+            >
+              <span style={{
+                fontSize: 14, lineHeight: 1,
+                fontWeight: isToday || isSelected ? "bold" : "normal",
+                color: isSelected ? "#fff" : dow === 0 ? "#e57373" : dow === 6 ? "#64b5f6" : "#3d2010",
+              }}>
+                {day}
+              </span>
+              <div style={{ display: "flex", gap: 2, height: 6, alignItems: "center" }}>
+                {hasMeal && <span style={{ width: 5, height: 5, borderRadius: "50%", background: isSelected ? "#fff" : "#c17a3a", display: "inline-block" }} />}
+                {hasLab  && <span style={{ width: 5, height: 5, borderRadius: "50%", background: isSelected ? "#ffe0b2" : "#1565c0", display: "inline-block" }} />}
+              </div>
+            </button>
+          );
+        })}
+      </div>
+      {/* Legend + Today button */}
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 10 }}>
+        <div style={{ display: "flex", gap: 12 }}>
+          <span style={{ fontSize: 11, color: "#888" }}>
+            <span style={{ display: "inline-block", width: 7, height: 7, borderRadius: "50%", background: "#c17a3a", verticalAlign: "middle", marginRight: 3 }} />食事
+          </span>
+          <span style={{ fontSize: 11, color: "#888" }}>
+            <span style={{ display: "inline-block", width: 7, height: 7, borderRadius: "50%", background: "#1565c0", verticalAlign: "middle", marginRight: 3 }} />検査
+          </span>
+        </div>
+        {selectedDate !== today && (
+          <button
+            onClick={() => onSelectDate(today)}
+            style={{ fontSize: 12, color: "#c17a3a", background: "#fdf5eb", border: "1px solid #e8c898", borderRadius: 6, padding: "4px 10px", cursor: "pointer", fontFamily: FONT }}
+          >
+            今日に戻す
+          </button>
+        )}
+      </div>
+    </div>
+  );
+}
+
 // ─── メインコンポーネント ─────────────────────────────────
 type StatusKey = "ok" | "caution" | "ng";
 
@@ -728,59 +950,21 @@ export default function Home() {
           ))}
         </div>
 
-        {/* ─── 日付選択 ─── */}
-        <div style={{
-          background: "#fff",
-borderRadius: 14,
-          padding: "12px 16px",
-          marginBottom: 14,
-          boxShadow: "0 2px 8px rgba(0,0,0,0.06)",
-          display: "flex",
-          alignItems: "center",
-          gap: 10,
-          flexWrap: "wrap",
-        }}>
-          <span style={{ fontSize: 13, fontWeight: "bold", color: "#5c3d1e", whiteSpace: "nowrap" }}>
-            📅 記録日
-          </span>
-          <input
-            type="date"
-            value={selectedDate}
-            max={today}
-            onChange={(e) => {
-              if (e.target.value) setSelectedDate(e.target.value);
-            }}
-            style={{
-              flex: 1,
-              minWidth: 140,
-              padding: "7px 10px",
-              fontSize: 15,
-              border: "1.5px solid #e8ddd0",
-              borderRadius: 8,
-              fontFamily: FONT,
-              color: "#3d2010",
-              background: "#fdf8f0",
-            }}
-          />
-          {selectedDate !== today && (
-            <button
-              onClick={() => setSelectedDate(today)}
-              style={{
-                padding: "7px 14px",
-                fontSize: 13,
-                background: "#fdf5eb",
-                border: "1.5px solid #e8c898",
-                borderRadius: 8,
-                cursor: "pointer",
-                fontFamily: FONT,
-                color: "#c17a3a",
-                whiteSpace: "nowrap",
-              }}
-            >
-              今日に戻す
-            </button>
-          )}
-        </div>
+        {/* ─── カレンダー（日付選択） ─── */}
+        <CalendarPicker
+          selectedDate={selectedDate}
+          today={today}
+          mealHistory={mealHistory}
+          labRecords={labRecords}
+          onSelectDate={(d) => {
+            setSelectedDate(d);
+            setItems([]);
+            setResult(null);
+            setAdvice("");
+            setProAdvice("");
+            setMealSavedForCurrentJudge(false);
+          }}
+        />
 
         {/* 追加済み食品リスト */}
         {items.length > 0 && (
@@ -1042,7 +1226,7 @@ borderRadius: 14,
           </div>
 
           {/* 直近平均 */}
-          {(avg3.totalWater > 0 || avg7.totalWater > 0 || avg3.totalSalt > 0 || avg7.totalSalt > 0) && (
+          {(avg3.totalWater > 0 || avg7.totalWater > 0 || avg3.totalSalt > 0 || avg7.totalSalt > 0 || avg3.totalPotassium > 0 || avg7.totalPotassium > 0) && (
             <div style={{
               background: "#fff",
               borderRadius: 14,
@@ -1184,104 +1368,99 @@ borderRadius: 14,
 
         </div>
 
-        {/* ─── 食事履歴セクション ─── */}
-        {sortedDates.length > 0 && (
+        {/* ─── 選択日の食事履歴 ─── */}
+        {historyByDate[selectedDate] && historyByDate[selectedDate].length > 0 && (
           <div style={{ marginTop: 24 }}>
             <div style={{ fontSize: 14, fontWeight: "bold", color: "#5c3d1e", marginBottom: 12 }}>
-              📋 食事履歴
+              🍽 {formatDateLabel(selectedDate, today)}の食事記録
             </div>
 
-            {sortedDates.map((dateStr) => (
-              <div key={dateStr} style={{ marginBottom: 20 }}>
-                {/* 日付ヘッダー */}
-                <div style={{
-                  fontSize: 13, fontWeight: "bold", color: "#888",
-                  padding: "6px 4px",
-                  borderBottom: "1px solid #f0e8d8",
-                  marginBottom: 8,
-                }}>
-                  {formatDateLabel(dateStr, today)}
+            {historyByDate[selectedDate].map((meal) => (
+              <div key={meal.id} style={{
+                background: "#fff",
+                borderRadius: 12,
+                padding: "14px 14px 12px",
+                marginBottom: 8,
+                boxShadow: "0 1px 6px rgba(0,0,0,0.06)",
+                border: "1px solid #f0e8d8",
+              }}>
+                {/* 食品名 + 削除 */}
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 8 }}>
+                  <p style={{ fontSize: 14, color: "#3d2010", lineHeight: 1.6, margin: 0, flex: 1 }}>
+                    {meal.items.map((f: any) => f.name).join("、")}
+                  </p>
+                  <button
+                    onClick={() => handleDeleteMeal(meal.id)}
+                    style={{
+                      flexShrink: 0, width: 28, height: 28,
+                      borderRadius: "50%", background: "#fff0f0",
+                      border: "1px solid #ffd0d0", fontSize: 14, color: "#e07070",
+                      cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", lineHeight: 1,
+                    }}
+                    aria-label="削除"
+                  >×</button>
                 </div>
 
-                {/* その日の食事カード（新しい順） */}
-                {historyByDate[dateStr].map((meal) => (
-                  <div key={meal.id} style={{
-                    background: "#fff",
-                    borderRadius: 12,
-                    padding: "14px 14px 12px",
-                    marginBottom: 8,
-                    boxShadow: "0 1px 6px rgba(0,0,0,0.06)",
-                    border: "1px solid #f0e8d8",
-                  }}>
-                    {/* 食品名行 + 削除ボタン */}
-                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 8 }}>
-                      <p style={{
-                        fontSize: 14, color: "#3d2010", lineHeight: 1.6, margin: 0, flex: 1,
-                      }}>
-                        {meal.items.map((f: any) => f.name).join(", ")}
-                      </p>
-                      <button
-                        onClick={() => handleDeleteMeal(meal.id)}
-                        style={{
-                          flexShrink: 0,
-                          width: 28, height: 28,
-                          borderRadius: "50%",
-                          background: "#fff0f0",
-                          border: "1px solid #ffd0d0",
-                          fontSize: 14, color: "#e07070",
-                          cursor: "pointer",
-                          display: "flex", alignItems: "center", justifyContent: "center",
-                          lineHeight: 1,
-                        }}
-                        aria-label="削除"
-                      >
-                        ×
-                      </button>
-                    </div>
+                {/* 栄養素合計 */}
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 6, marginTop: 10, paddingTop: 10, borderTop: "1px solid #f5ede0" }}>
+                  <div style={{ background: "#f0f7ff", borderRadius: 8, padding: "6px 8px", textAlign: "center" }}>
+                    <div style={{ fontSize: 10, color: "#888" }}>💧 水分</div>
+                    <div style={{ fontSize: 15, fontWeight: "bold", color: "#1565c0" }}>{meal.total.water}<span style={{ fontSize: 11, fontWeight: "normal" }}>ml</span></div>
+                  </div>
+                  <div style={{ background: "#fff8e8", borderRadius: 8, padding: "6px 8px", textAlign: "center" }}>
+                    <div style={{ fontSize: 10, color: "#888" }}>🧂 塩分</div>
+                    <div style={{ fontSize: 15, fontWeight: "bold", color: "#5c3d1e" }}>{meal.total.salt.toFixed(1)}<span style={{ fontSize: 11, fontWeight: "normal" }}>g</span></div>
+                  </div>
+                  <div style={{ background: meal.total.potassium > 550 ? "#fff3e0" : "#f1f8e9", borderRadius: 8, padding: "6px 8px", textAlign: "center" }}>
+                    <div style={{ fontSize: 10, color: "#888" }}>🥦 カリウム</div>
+                    <div style={{ fontSize: 15, fontWeight: "bold", color: meal.total.potassium > 550 ? "#e65100" : "#388e3c" }}>{meal.total.potassium}<span style={{ fontSize: 11, fontWeight: "normal" }}>mg</span></div>
+                  </div>
+                  <div style={{ background: meal.total.phosphorus > 220 ? "#fff3e0" : "#f8f0ff", borderRadius: 8, padding: "6px 8px", textAlign: "center" }}>
+                    <div style={{ fontSize: 10, color: "#888" }}>🦴 リン</div>
+                    <div style={{ fontSize: 15, fontWeight: "bold", color: meal.total.phosphorus > 220 ? "#e65100" : "#7b1fa2" }}>{meal.total.phosphorus}<span style={{ fontSize: 11, fontWeight: "normal" }}>mg</span></div>
+                  </div>
+                </div>
 
-                    {/* 合計値 */}
-                    <div style={{
-                      display: "flex", gap: 12, flexWrap: "wrap",
-                      marginTop: 10, paddingTop: 10,
-                      borderTop: "1px solid #f5ede0",
+                {/* 評価バッジ + アドバイス */}
+                {meal.overall && (
+                  <div style={{ marginTop: 10 }}>
+                    <span style={{
+                      display: "inline-block",
+                      fontSize: 12, fontWeight: "bold",
+                      color: STATUS[meal.overall].text,
+                      background: STATUS[meal.overall].bg,
+                      border: `1px solid ${STATUS[meal.overall].border}`,
+                      padding: "3px 10px", borderRadius: 6,
                     }}>
-                      <span style={{ fontSize: 12, color: "#1565c0" }}>
-                        💧 {meal.total.water}ml
-                      </span>
-                      <span style={{ fontSize: 12, color: "#5c3d1e" }}>
-                        🧂 {meal.total.salt.toFixed(1)}g
-                      </span>
-                      <span style={{ fontSize: 12, color: "#388e3c" }}>
-                        K {meal.total.potassium}mg
-                      </span>
-                      <span style={{ fontSize: 12, color: "#7b1fa2" }}>
-                        P {meal.total.phosphorus}mg
-                      </span>
-                    </div>
-                    {/* 評価バッジ + アドバイス */}
-                    {meal.overall && (
-                      <div style={{ marginTop: 8, display: "flex", alignItems: "flex-start", gap: 6 }}>
-                        <span style={{
-                          fontSize: 12, fontWeight: "bold",
-                          color: STATUS[meal.overall].text,
-                          background: STATUS[meal.overall].bg,
-                          border: `1px solid ${STATUS[meal.overall].border}`,
-                          padding: "2px 7px", borderRadius: 6, flexShrink: 0,
-                        }}>
-                          {STATUS[meal.overall].icon} {STATUS[meal.overall].label}
-                        </span>
-                        {meal.advice && (
-                          <span style={{ fontSize: 11, color: "#888", lineHeight: 1.5, fontStyle: "italic" }}>
-                            {meal.advice}
-                          </span>
-                        )}
-                      </div>
+                      {STATUS[meal.overall].icon} {STATUS[meal.overall].label}
+                    </span>
+                    {meal.advice && (
+                      <p style={{ fontSize: 12, color: "#666", lineHeight: 1.6, margin: "6px 0 0", fontStyle: "italic" }}>
+                        {meal.advice}
+                      </p>
                     )}
                   </div>
-                ))}
+                )}
               </div>
             ))}
           </div>
+        )}
+
+        {/* ─── 過去の全履歴（折りたたみ） ─── */}
+        {sortedDates.filter(d => d !== selectedDate).length > 0 && (
+          <PastHistoryList
+            sortedDates={sortedDates.filter(d => d !== selectedDate)}
+            historyByDate={historyByDate}
+            today={today}
+            onSelectDate={(d) => {
+              setSelectedDate(d);
+              setItems([]);
+              setResult(null);
+              setAdvice("");
+              setProAdvice("");
+              setMealSavedForCurrentJudge(false);
+            }}
+          />
         )}
 
       </div>

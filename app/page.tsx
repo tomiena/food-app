@@ -667,6 +667,8 @@ export default function Home() {
   const [mealSavedForCurrentJudge, setMealSavedForCurrentJudge] = useState(false);
   // 検査記録を全件表示するか
   const [showAllLabRecords, setShowAllLabRecords] = useState(false);
+  // 手動入力の飲み水（ml）
+  const [drinkWater, setDrinkWater] = useState(0);
 
   // ─ 初回ロード ─
   function loadData() {
@@ -719,21 +721,22 @@ export default function Home() {
     setAdvice("");
     setProAdvice("");
     setMealSavedForCurrentJudge(false);
+    setDrinkWater(0);
     setTab(0);
   };
 
   const cat = CATEGORIES[tab];
 
   // ─ リアルタイム水分・ナトリウム計算（単一ソース） ─
-  // totalSodium は judgeMeal と同じ式 (mg)。表示時のみ食塩相当量(g)へ変換する
-  const totalWater = Math.round(
+  // foodWater: 食品由来の水分、displayWater: 飲み水を加えた表示用水分
+  const foodWater = Math.round(
     items.reduce((sum, item) => sum + item.food.water * item.amount / 100, 0)
   );
+  const displayWater = foodWater + drinkWater;
+  // totalSodium は judgeMeal と同じ式 (mg) — 全表示で統一
   const totalSodium = Math.round(
     items.reduce((sum, item) => sum + item.food.sodium * item.amount / 100, 0)
   );
-  // 食塩相当量(g) = sodium(mg) × 2.54 ÷ 1000 — 表示専用
-  const saltG = Math.round(totalSodium * 2.54 / 1000 * 10) / 10;
 
   // 有料かどうか
   const isPremium = subscriptionStatus === "active";
@@ -758,7 +761,7 @@ export default function Home() {
         date: selectedDate,
         items: items.map((i) => ({ name: i.food.name, foodId: i.food.id, amount: i.amount })),
         total: {
-          water:      totalWater,
+          water:      displayWater,       // 食品水分 + 手動飲み水
           sodium:     r.sodium.value,     // mg — same value shown in judgment panel
           potassium:  r.potassium.value,
           phosphorus: r.phosphorus.value,
@@ -780,9 +783,10 @@ export default function Home() {
     setMealHistory((prev) => prev.filter((m) => m.id !== id).map(migrateMeal));
   };
 
-  // ─ 水分・塩分ステータス ─
-  const waterStatus = totalWater >= 1500 ? "ok" : totalWater >= 1000 ? "caution" : "low";
-  const saltStatus  = saltG <= 6 ? "ok" : saltG <= 8 ? "caution" : "high";
+  // ─ 水分・ナトリウムステータス（judgeMeal と同じ閾値 mg） ─
+  const waterStatus = displayWater >= 500 ? "ok" : displayWater >= 200 ? "caution" : "low";
+  // 塩分ステータスは judgeMeal と同じ閾値で統一（700mg / 1050mg）
+  const saltStatus  = totalSodium <= 700 ? "ok" : totalSodium <= 1050 ? "caution" : "high";
 
   const waterColor = waterStatus === "ok" ? "#1b5e20" : waterStatus === "caution" ? "#e65100" : "#b71c1c";
   const saltColor  = saltStatus  === "ok" ? "#1b5e20" : saltStatus  === "caution" ? "#e65100" : "#b71c1c";
@@ -841,10 +845,10 @@ export default function Home() {
           }}>
             <div style={{ fontSize: 11, color: "#888", marginBottom: 2 }}>💧 今回の水分</div>
             <div style={{ fontSize: 22, fontWeight: "bold", color: waterColor, lineHeight: 1 }}>
-              {totalWater}<span style={{ fontSize: 13, fontWeight: "normal" }}>ml</span>
+              {displayWater}<span style={{ fontSize: 13, fontWeight: "normal" }}>ml</span>
             </div>
             <div style={{ fontSize: 10, color: "#aaa", marginTop: 2 }}>
-              {waterStatus === "ok" ? "適正" : waterStatus === "caution" ? "やや少ない" : "少なめ"}
+              {foodWater > 0 && drinkWater > 0 ? `食品${foodWater}+飲水${drinkWater}` : waterStatus === "ok" ? "適正" : "食品由来の水分"}
             </div>
           </div>
           <div style={{
@@ -853,20 +857,28 @@ export default function Home() {
             border: `1.5px solid ${saltStatus === "ok" ? "#81c784" : saltStatus === "caution" ? "#ffb300" : "#ef9a9a"}`,
             borderRadius: 10,
           }}>
-            <div style={{ fontSize: 11, color: "#888", marginBottom: 2 }}>🧂 今回の塩分</div>
+            <div style={{ fontSize: 11, color: "#888", marginBottom: 2 }}>🧂 今回のナトリウム</div>
             <div style={{ fontSize: 22, fontWeight: "bold", color: saltColor, lineHeight: 1 }}>
-              {saltG.toFixed(1)}<span style={{ fontSize: 13, fontWeight: "normal" }}>g</span>
+              {totalSodium}<span style={{ fontSize: 13, fontWeight: "normal" }}>mg</span>
             </div>
             <div style={{ fontSize: 10, color: "#aaa", marginTop: 2 }}>
-              {saltStatus === "ok" ? "適正（6g以下）" : saltStatus === "caution" ? "やや多い" : "多すぎ"}
+              {saltStatus === "ok" ? "適正（700mg以下）" : saltStatus === "caution" ? "やや多い" : "多すぎ"}
             </div>
           </div>
+        </div>
+
+        {/* 飲み水入力 */}
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8, padding: "6px 16px 8px" }}>
+          <span style={{ fontSize: 11, color: "#888" }}>🥤 飲み水を追加</span>
+          <button onClick={() => setDrinkWater(w => Math.max(0, w - 50))} style={{ width: 26, height: 26, borderRadius: 13, border: "1px solid #d0b080", background: "#fff8ee", fontSize: 16, lineHeight: "24px", cursor: "pointer", color: "#8b5e2a" }}>−</button>
+          <span style={{ fontSize: 13, fontWeight: "bold", color: "#5c3d1e", minWidth: 52, textAlign: "center" }}>{drinkWater}ml</span>
+          <button onClick={() => setDrinkWater(w => w + 50)} style={{ width: 26, height: 26, borderRadius: 13, border: "1px solid #d0b080", background: "#fff8ee", fontSize: 16, lineHeight: "24px", cursor: "pointer", color: "#8b5e2a" }}>＋</button>
         </div>
 
         {/* 相関コメント */}
         {correlation && (
           <div style={{
-            padding: "6px 16px 10px",
+            padding: "4px 16px 8px",
             textAlign: "center",
             fontSize: 12,
             color: correlation.color,

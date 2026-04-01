@@ -15,20 +15,41 @@ export function getMealsBeforeDateFromHistory(date: string, history: any[]) {
 export function getRecentAverageFromHistory(days: number, history: any[]) {
   return {};
 }
-export function getMealsBeforeDateFromHistory(date: string, history: any[]) {
-  return history.filter((meal) => meal.date < date);
+export function getDailyStatsFromHistory(date: string, history: any[]) {
+  const meals = history.filter((meal: any) => meal.date === date);
+  let totalWater = 0;
+  let totalSalt = 0;
+  for (const meal of meals) {
+    totalWater += meal.water ?? 0;
+    totalSalt += meal.salt ?? 0;
+  }
+  return { totalWater, totalSalt };
 }
 
-export function getLabRecords() { return []; }
-export function saveLabRecord(record: {
-  date: string
-  potassium: number
-  phosphorus: number
-}) {
+export function getLabRecords(): LabRecord[] { return []; }
+export function saveLabRecord(record: LabRecord) {
   const data = getLabRecords()
   data.push(record)
   localStorage.setItem("labRecords", JSON.stringify(data))
 }
 
-export type Meal = any;
-export type LabRecord = any;
+export type Meal = {
+  id: string;
+  date: string;
+  items: { name: string }[];
+  total: {
+    water: number;
+    salt: number;
+    potassium: number;
+    phosphorus: number;
+  };
+  water?: number;
+  salt?: number;
+};
+
+export type LabRecord = {
+  id?: string;
+  date: string;
+  potassium: number;
+  phosphorus: number;
+};

@@ -1156,7 +1156,7 @@ borderRadius: 14,
                       <p style={{
                         fontSize: 14, color: "#3d2010", lineHeight: 1.6, margin: 0, flex: 1,
                       }}>
-                        {meal.items.map((f) => f.name).join(", ")}
+                        {meal.items.map((f: any) => f.name).join(", ")}
                       </p>
                       <button
                         onClick={() => handleDeleteMeal(meal.id)}

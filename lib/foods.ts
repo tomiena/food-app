@@ -1,12 +1,13 @@
-type Food = {
+export type Food = {
   id: string;
+  name: string;
+  water: number;
+  sodium: number;
+  potassium: number;
+  phosphorus: number;
 };
 
 export const FOODS: Food[] = [];
-
-type Food = {
-  id: string;
-};
 
 export function getFoodRisk(food: Food) {
   return { sodium: false, potassium: false };

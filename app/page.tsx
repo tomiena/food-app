@@ -12,7 +12,6 @@ import {
   deleteMealById,
   getDailyStatsFromHistory,
   getRecentAverageFromHistory,
-  getMealsBeforeDateFromHistory,
   getLabRecords,
   saveLabRecord,
   type Meal,
@@ -397,20 +396,22 @@ export default function Home() {
 
   // 課金状態（'free' | 'active'）
   const [subscriptionStatus, setSubscriptionStatus] = useState<"free" | "active">("free");
-  // 制限モーダル表示フラグ
-  const [showLimitModal, setShowLimitModal] = useState(false);
+  // 現在の判定結果が保存済みかどうか
+  const [mealSavedForCurrentJudge, setMealSavedForCurrentJudge] = useState(false);
+  // 検査記録を全件表示するか
+  const [showAllLabRecords, setShowAllLabRecords] = useState(false);
 
   // ─ 初回ロード ─
   function loadData() {
     setMealHistory(getMealHistory());
-    setLabRecords(getLabRecords().slice().reverse().slice(0, 3));
+    setLabRecords(getLabRecords().slice().reverse());
   }
   useEffect(() => { loadData(); }, []);
 
   // ─ 派生計算（mealHistoryから算出） ─
   const todayStats = getDailyStatsFromHistory(selectedDate, mealHistory);
-  const avg3 = getMealsBeforeDateFromHistory(selectedDate, mealHistory)
-  const avg7       = getRecentAverageFromHistory(7, mealHistory);
+  const avg3 = getRecentAverageFromHistory(3, mealHistory);
+  const avg7 = getRecentAverageFromHistory(7, mealHistory);
 
   // ─ トースト ─
   const showToast = (msg: string) => {
@@ -432,6 +433,7 @@ export default function Home() {
     setItems((prev) => [...prev, { food, amount: grams }]);
     setResult(null);
     setAdvice("");
+    setMealSavedForCurrentJudge(false);
     showToast(`${picker.label}（${portionLabel}）を追加しました`);
     setPicker(null);
   };
@@ -446,6 +448,7 @@ export default function Home() {
     setItems([]);
     setResult(null);
     setAdvice("");
+    setMealSavedForCurrentJudge(false);
     setTab(0);
   };
 
@@ -462,32 +465,33 @@ export default function Home() {
   // 有料かどうか
   const isPremium = subscriptionStatus === "active";
   // 選択日の保存済み食事数（無料制限チェック用）
-  const selectedDateMealCount = mealHistory.filter((m) => m.date === selectedDate).length;
+  const selectedDateMealCount = todayStats.mealCount;
 
   // ─ 判定・保存 ─
   const handleJudge = () => {
     if (items.length === 0) return;
     const r = judgeMeal(items);
+    const adviceText = generateAdvice(r);
     setResult(r);
-    setAdvice(generateAdvice(r));
+    setAdvice(adviceText);
 
-    // 無料ユーザーが1日3食を超える場合は保存しない
-    if (!isPremium && selectedDateMealCount >= 3) {
-      setShowLimitModal(true);
-    } else {
-      // 新形式で保存（items: Food[],amount は含まない）
+    const willSave = isPremium || selectedDateMealCount < 3;
+    if (willSave) {
       saveMealHistory({
         date: selectedDate,
-        items: items.map((i) => i.food),
+        items: items.map((i) => ({ name: i.food.name })),
         total: {
           water:      totalWater,
           salt:       totalSalt,
           potassium:  r.potassium.value,
           phosphorus: r.phosphorus.value,
         },
+        overall: r.overall,
+        advice:  adviceText,
       });
       setMealHistory(getMealHistory());
     }
+    setMealSavedForCurrentJudge(willSave);
     setTimeout(() => {
       resultRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
     }, 80);
@@ -646,7 +650,7 @@ export default function Home() {
             borderRadius: 12,
           }}>
             <p style={{ fontSize: 12, color: "#8a6020", lineHeight: 1.5, margin: 0, flex: 1 }}>
-              記録を続けると、<br />体調の変化に気づけます
+              無理なく続けられる<br />記録を応援します
             </p>
             <button
               onClick={async () => {
@@ -674,7 +678,7 @@ export default function Home() {
                 textAlign: "center",
               }}
             >
-              有料プラン<br />月額500円
+              有料プランを見る
             </button>
           </div>
         )}
@@ -901,8 +905,8 @@ borderRadius: 14,
               🔄　最初からやり直す
             </button>
 
-            {/* ② 課金導線（判定結果直後・無料ユーザーのみ） */}
-            {!isPremium && (
+            {/* ② 課金導線（4食目以降・未保存の場合のみ） */}
+            {!isPremium && !mealSavedForCurrentJudge && (
               <div style={{
                 marginTop: 16,
                 padding: "18px 16px",
@@ -911,10 +915,10 @@ borderRadius: 14,
                 borderRadius: 12,
               }}>
                 <p style={{ fontSize: 14, fontWeight: "bold", color: "#7a4420", margin: "0 0 4px" }}>
-                  ここから先は記録が残りません
+                  この食事は記録されていません
                 </p>
                 <p style={{ fontSize: 13, color: "#a0632a", lineHeight: 1.6, margin: "0 0 14px" }}>
-                  続けると体調の変化に気づけます
+                  この先も記録を残すと、体調の変化に気づきやすくなります。
                 </p>
                 <button
                   onClick={async () => {
@@ -970,36 +974,67 @@ borderRadius: 14,
                 まだ記録がありません
               </p>
             ) : (
-              <div style={{ display: "flex", gap: 10 }}>
-                <div style={{
-                  flex: 1, textAlign: "center", padding: "10px 8px",
-                  background: (todayStats as any).totalWater >= 1500 ? "#e8f5e9" : (todayStats as any).totalWater >= 1000 ? "#fff8e1" : "#ffebee",
-                  borderRadius: 10,
-                }}>
-                  <div style={{ fontSize: 11, color: "#888" }}>💧 水分</div>
-                  <div style={{ fontSize: 20, fontWeight: "bold", color: "#1565c0" }}>
-                    {(todayStats as any).totalWater}<span style={{ fontSize: 12, fontWeight: "normal" }}>ml</span>
+              <>
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
+                  <div style={{
+                    textAlign: "center", padding: "10px 8px",
+                    background: todayStats.totalWater >= 1500 ? "#e8f5e9" : todayStats.totalWater >= 1000 ? "#fff8e1" : "#ffebee",
+                    borderRadius: 10,
+                  }}>
+                    <div style={{ fontSize: 11, color: "#888" }}>💧 水分</div>
+                    <div style={{ fontSize: 20, fontWeight: "bold", color: "#1565c0" }}>
+                      {todayStats.totalWater}<span style={{ fontSize: 12, fontWeight: "normal" }}>ml</span>
+                    </div>
+                  </div>
+                  <div style={{
+                    textAlign: "center", padding: "10px 8px",
+                    background: todayStats.totalSalt <= 6 ? "#e8f5e9" : todayStats.totalSalt <= 8 ? "#fff8e1" : "#ffebee",
+                    borderRadius: 10,
+                  }}>
+                    <div style={{ fontSize: 11, color: "#888" }}>🧂 塩分</div>
+                    <div style={{ fontSize: 20, fontWeight: "bold", color: "#5c3d1e" }}>
+                      {todayStats.totalSalt.toFixed(1)}<span style={{ fontSize: 12, fontWeight: "normal" }}>g</span>
+                    </div>
+                  </div>
+                  <div style={{
+                    textAlign: "center", padding: "10px 8px",
+                    background: todayStats.totalPotassium > 1650 ? "#ffebee" : todayStats.totalPotassium > 1200 ? "#fff8e1" : "#e8f5e9",
+                    borderRadius: 10,
+                  }}>
+                    <div style={{ fontSize: 11, color: "#888" }}>🥦 カリウム</div>
+                    <div style={{ fontSize: 20, fontWeight: "bold", color: "#388e3c" }}>
+                      {todayStats.totalPotassium}<span style={{ fontSize: 12, fontWeight: "normal" }}>mg</span>
+                    </div>
+                  </div>
+                  <div style={{
+                    textAlign: "center", padding: "10px 8px",
+                    background: todayStats.totalPhosphorus > 660 ? "#ffebee" : todayStats.totalPhosphorus > 500 ? "#fff8e1" : "#e8f5e9",
+                    borderRadius: 10,
+                  }}>
+                    <div style={{ fontSize: 11, color: "#888" }}>🦴 リン</div>
+                    <div style={{ fontSize: 20, fontWeight: "bold", color: "#7b1fa2" }}>
+                      {todayStats.totalPhosphorus}<span style={{ fontSize: 12, fontWeight: "normal" }}>mg</span>
+                    </div>
                   </div>
                 </div>
-                <div style={{
-                  flex: 1, textAlign: "center", padding: "10px 8px",
-                  background: (todayStats as any).totalSalt <= 6 ? "#e8f5e9" : (todayStats as any).totalSalt <= 8 ? "#fff8e1" : "#ffebee",
-                  borderRadius: 10,
-                }}>
-                  <div style={{ fontSize: 11, color: "#888" }}>🧂 塩分</div>
-                  <div style={{ fontSize: 20, fontWeight: "bold", color: "#5c3d1e" }}>
-                    {(todayStats as any).totalSalt.toFixed(1)}<span style={{ fontSize: 12, fontWeight: "normal" }}>g</span>
-                  </div>
-                </div>
-              </div>
+                {(() => {
+                  if (todayStats.totalSalt > 8)
+                    return <p style={{ fontSize: 12, color: "#c62828", marginTop: 8, margin: "8px 0 0", textAlign: "center" }}>塩分が多めの1日です。明日は少し意識してみましょう</p>;
+                  if (todayStats.totalPotassium > 1650)
+                    return <p style={{ fontSize: 12, color: "#e65100", marginTop: 8, margin: "8px 0 0", textAlign: "center" }}>カリウムが多い日です。野菜の茹でこぼしを心がけましょう</p>;
+                  if (todayStats.mealCount > 0)
+                    return <p style={{ fontSize: 12, color: "#2e7d32", marginTop: 8, margin: "8px 0 0", textAlign: "center" }}>今日も記録できています。この調子で続けましょう 😊</p>;
+                  return null;
+                })()}
+              </>
             )}
           </div>
 
           {/* 直近平均 */}
-          {((avg3 as any).totalSalt > 0 || (avg7 as any).totalSalt > 0)&& (
+          {(avg3.totalWater > 0 || avg7.totalWater > 0 || avg3.totalSalt > 0 || avg7.totalSalt > 0) && (
             <div style={{
               background: "#fff",
-borderRadius: 14,
+              borderRadius: 14,
               padding: "16px", marginBottom: 12,
               boxShadow: "0 2px 8px rgba(0,0,0,0.06)",
             }}>
@@ -1010,13 +1045,16 @@ borderRadius: 14,
                 <div
                   key={label}
                   style={{
-                    display: "flex", alignItems: "center", padding: "8px 0",
+                    display: "flex", flexWrap: "wrap", alignItems: "center", gap: "4px 12px",
+                    padding: "8px 0",
                     borderBottom: label === "直近3日" ? "1px solid #f5ede0" : "none",
                   }}
                 >
-                  <span style={{ width: 70, fontSize: 13, color: "#888" }}>{label}</span>
-                  <span style={{ flex: 1, fontSize: 14, color: "#1565c0" }}>💧 {(data as any).totalWater}ml</span>
-                  <span style={{ flex: 1, fontSize: 14, color: "#5c3d1e" }}>🧂 {(data as any).totalSalt.toFixed(1)}g</span>
+                  <span style={{ width: 60, fontSize: 13, color: "#888", flexShrink: 0 }}>{label}</span>
+                  <span style={{ fontSize: 13, color: "#1565c0" }}>💧 {data.totalWater}ml</span>
+                  <span style={{ fontSize: 13, color: "#5c3d1e" }}>🧂 {data.totalSalt.toFixed(1)}g</span>
+                  <span style={{ fontSize: 13, color: "#388e3c" }}>K {data.totalPotassium}mg</span>
+                  <span style={{ fontSize: 13, color: "#7b1fa2" }}>P {data.totalPhosphorus}mg</span>
                 </div>
               ))}
             </div>
@@ -1075,7 +1113,7 @@ borderRadius: 14,
                     if (!labInput.date || isNaN(k) || isNaN(p)) return;
                     saveLabRecord({ date: labInput.date, potassium: k, phosphorus: p });
                     setShowLabForm(false);
-                    setLabRecords(getLabRecords().slice().reverse().slice(0, 3));
+                    setLabRecords(getLabRecords().slice().reverse());
                     showToast("検査データを保存しました");
                   }}
                   style={{
@@ -1091,43 +1129,44 @@ borderRadius: 14,
               </div>
             )}
 
-            {/* 検査×食事 相関（新形式履歴から算出） */}
+            {/* 検査記録一覧 */}
             {labRecords.length > 0 && (
               <div style={{ marginTop: 16 }}>
-                <div style={{ fontSize: 12, color: "#888", marginBottom: 8 }}>直近の検査結果と食事の関係</div>
-                {labRecords.map((lab) => {
-                  
-                  
-                  return (
-                    <div key={lab.id} style={{
-                      padding: "12px",
-                      background: "#f8f4ff",
-                      borderRadius: 10,
-                      marginBottom: 8,
-                      border: "1px solid #e8ddf8",
-                    }}>
-                      <div style={{ fontSize: 13, fontWeight: "bold", color: "#5c3d1e", marginBottom: 6 }}>
-                        🗓 {lab.date}　K:{" "}
-                        <span style={{ color: lab.potassium > 5.0 ? "#c62828" : "#2e7d32" }}>
-                          {lab.potassium}
-                        </span>
-                        　P:{" "}
-                        <span style={{ color: lab.phosphorus > 6.0 ? "#c62828" : "#2e7d32" }}>
-                          {lab.phosphorus}
-                        </span>
-                      </div>
-                      <div style={{ fontSize: 12, color: "#bbb" }}>
-  検査前3日の食事データなし
-</div>
-                      
-                      
-                        
-                    
-                      
-                      
+                <div style={{ fontSize: 12, color: "#888", marginBottom: 8 }}>検査結果の記録</div>
+                {(showAllLabRecords ? labRecords : labRecords.slice(0, 3)).map((lab) => (
+                  <div key={lab.id} style={{
+                    padding: "12px",
+                    background: "#f8f4ff",
+                    borderRadius: 10,
+                    marginBottom: 8,
+                    border: "1px solid #e8ddf8",
+                  }}>
+                    <div style={{ fontSize: 13, fontWeight: "bold", color: "#5c3d1e" }}>
+                      🗓 {lab.date}　K:{" "}
+                      <span style={{ color: lab.potassium > 5.0 ? "#c62828" : "#2e7d32" }}>
+                        {lab.potassium}
+                      </span>
+                      　P:{" "}
+                      <span style={{ color: lab.phosphorus > 6.0 ? "#c62828" : "#2e7d32" }}>
+                        {lab.phosphorus}
+                      </span>
                     </div>
-                  );
-                })}
+                  </div>
+                ))}
+                {labRecords.length > 3 && (
+                  <button
+                    onClick={() => setShowAllLabRecords((v) => !v)}
+                    style={{
+                      background: "none", border: "none", cursor: "pointer",
+                      fontSize: 12, color: "#aaa", padding: "4px 0",
+                      fontFamily: FONT, width: "100%", textAlign: "center",
+                    }}
+                  >
+                    {showAllLabRecords
+                      ? "折りたたむ ▲"
+                      : `過去の記録をすべて見る（${labRecords.length - 3}件） ▼`}
+                  </button>
+                )}
               </div>
             )}
           </div>
@@ -1208,6 +1247,25 @@ borderRadius: 14,
                         P {meal.total.phosphorus}mg
                       </span>
                     </div>
+                    {/* 評価バッジ + アドバイス */}
+                    {meal.overall && (
+                      <div style={{ marginTop: 8, display: "flex", alignItems: "flex-start", gap: 6 }}>
+                        <span style={{
+                          fontSize: 12, fontWeight: "bold",
+                          color: STATUS[meal.overall].text,
+                          background: STATUS[meal.overall].bg,
+                          border: `1px solid ${STATUS[meal.overall].border}`,
+                          padding: "2px 7px", borderRadius: 6, flexShrink: 0,
+                        }}>
+                          {STATUS[meal.overall].icon} {STATUS[meal.overall].label}
+                        </span>
+                        {meal.advice && (
+                          <span style={{ fontSize: 11, color: "#888", lineHeight: 1.5, fontStyle: "italic" }}>
+                            {meal.advice}
+                          </span>
+                        )}
+                      </div>
+                    )}
                   </div>
                 ))}
               </div>
@@ -1217,82 +1275,6 @@ borderRadius: 14,
 
       </div>
 
-      {/* ③ 制限モーダル（4食目以降・無料ユーザーのみ） */}
-      {showLimitModal && (
-        <>
-          <div
-            onClick={() => setShowLimitModal(false)}
-            style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.4)", zIndex: 200 }}
-          />
-          <div style={{
-            position: "fixed",
-            bottom: 0,
-            left: "50%",
-            transform: "translateX(-50%)",
-            width: "100%",
-            maxWidth: 500,
-            background: "#fff",
-            borderRadius: "20px 20px 0 0",
-            padding: "28px 24px 44px",
-            zIndex: 201,
-            boxShadow: "0 -4px 24px rgba(0,0,0,0.15)",
-            fontFamily: FONT,
-          }}>
-            <div style={{ width: 40, height: 4, background: "#ddd", borderRadius: 2, margin: "0 auto 24px" }} />
-            <div style={{ textAlign: "center", marginBottom: 22 }}>
-              <div style={{ fontSize: 48, marginBottom: 12 }}>🔒</div>
-              <p style={{ fontSize: 17, fontWeight: "bold", color: "#3d2010", margin: "0 0 8px" }}>
-                無料は1日3食までです
-              </p>
-              <p style={{ fontSize: 14, color: "#888", margin: 0, lineHeight: 1.6 }}>
-                これ以上は保存されません
-              </p>
-            </div>
-            <button
-              onClick={async () => {
-  try {
-    const res = await fetch("/api/checkout", { method: "POST" });
-    const data = await res.json();
-    if (data.url) window.location.href = data.url;
-    else showToast("決済の準備に失敗しました");
-  } catch {
-    showToast("決済の準備に失敗しました");
-  }
-}}
-              style={{
-                width: "100%",
-                padding: "15px",
-                fontSize: 16,
-                fontWeight: "bold",
-                background: "#c17a3a",
-                color: "#fff",
-                border: "none",
-                borderRadius: 12,
-                cursor: "pointer",
-                fontFamily: FONT,
-                marginBottom: 10,
-              }}
-            >
-              制限を解除する（月額500円）
-            </button>
-            <button
-              onClick={() => setShowLimitModal(false)}
-              style={{
-                width: "100%",
-                padding: "12px",
-                fontSize: 15,
-                background: "transparent",
-                color: "#aaa",
-                border: "none",
-                cursor: "pointer",
-                fontFamily: FONT,
-              }}
-            >
-              閉じる
-            </button>
-          </div>
-        </>
-      )}
 
       {/* ─── ポーションピッカー ─── */}
       {picker && (

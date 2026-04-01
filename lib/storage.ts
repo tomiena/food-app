@@ -5,25 +5,78 @@ export function parseDateLocal(dateStr: string) {
   return new Date(dateStr);
 }
 
-export function getMealHistory() { return []; }
-export function saveMealHistory(meal: any) {}
-export function deleteMealById(id: string) {}
+const MEAL_KEY = "mealHistory";
 
-export function getMealsBeforeDateFromHistory(date: string, history: any[]) {
+export function getMealHistory(): Meal[] {
+  if (typeof window === "undefined") return [];
+  try {
+    return JSON.parse(localStorage.getItem(MEAL_KEY) ?? "[]");
+  } catch {
+    return [];
+  }
+}
+
+export function saveMealHistory(meal: Omit<Meal, "id">) {
+  const history = getMealHistory();
+  history.push({ ...meal, id: crypto.randomUUID() });
+  localStorage.setItem(MEAL_KEY, JSON.stringify(history));
+}
+
+export function deleteMealById(id: string) {
+  const history = getMealHistory().filter((m) => m.id !== id);
+  localStorage.setItem(MEAL_KEY, JSON.stringify(history));
+}
+
+export function getMealsBeforeDateFromHistory(date: string, history: Meal[]) {
   return history.filter((meal) => meal.date < date);
 }
-export function getRecentAverageFromHistory(days: number, history: any[]) {
-  return {};
-}
-export function getDailyStatsFromHistory(date: string, history: any[]) {
-  const meals = history.filter((meal: any) => meal.date === date);
-  let totalWater = 0;
-  let totalSalt = 0;
-  for (const meal of meals) {
-    totalWater += meal.water ?? 0;
-    totalSalt += meal.salt ?? 0;
+
+export function getRecentAverageFromHistory(days: number, history: Meal[]) {
+  const dates = new Set<string>();
+  for (let i = 0; i < days; i++) {
+    const d = new Date();
+    d.setDate(d.getDate() - i);
+    dates.add(toDateStr(d));
   }
-  return { totalWater, totalSalt };
+  const byDate: Record<string, Meal[]> = {};
+  for (const meal of history) {
+    if (dates.has(meal.date)) {
+      if (!byDate[meal.date]) byDate[meal.date] = [];
+      byDate[meal.date].push(meal);
+    }
+  }
+  const activeDates = Object.keys(byDate);
+  if (activeDates.length === 0) {
+    return { totalWater: 0, totalSalt: 0, totalPotassium: 0, totalPhosphorus: 0 };
+  }
+  let water = 0, salt = 0, potassium = 0, phosphorus = 0;
+  for (const d of activeDates) {
+    for (const m of byDate[d]) {
+      water     += m.total.water     ?? 0;
+      salt      += m.total.salt      ?? 0;
+      potassium += m.total.potassium ?? 0;
+      phosphorus+= m.total.phosphorus?? 0;
+    }
+  }
+  const n = activeDates.length;
+  return {
+    totalWater:      Math.round(water / n),
+    totalSalt:       Math.round((salt / n) * 10) / 10,
+    totalPotassium:  Math.round(potassium / n),
+    totalPhosphorus: Math.round(phosphorus / n),
+  };
+}
+
+export function getDailyStatsFromHistory(date: string, history: Meal[]) {
+  const meals = history.filter((meal) => meal.date === date);
+  let totalWater = 0, totalSalt = 0, totalPotassium = 0, totalPhosphorus = 0;
+  for (const meal of meals) {
+    totalWater      += meal.total.water      ?? 0;
+    totalSalt       += meal.total.salt       ?? 0;
+    totalPotassium  += meal.total.potassium  ?? 0;
+    totalPhosphorus += meal.total.phosphorus ?? 0;
+  }
+  return { totalWater, totalSalt, totalPotassium, totalPhosphorus, mealCount: meals.length };
 }
 
 export function getLabRecords(): LabRecord[] {
@@ -50,8 +103,8 @@ export type Meal = {
     potassium: number;
     phosphorus: number;
   };
-  water?: number;
-  salt?: number;
+  overall?: "ok" | "caution" | "ng";
+  advice?: string;
 };
 
 export type LabRecord = {

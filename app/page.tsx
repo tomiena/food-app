@@ -697,6 +697,15 @@ export default function Home() {
   useEffect(() => {
     setMealHistory(getMealHistory().map(migrateMeal));
     setLabRecords(getLabRecords().slice().reverse());
+
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("paid") === "success") {
+      localStorage.setItem("isPaidUser", "true");
+      params.delete("paid");
+      const clean = params.toString();
+      window.history.replaceState({}, "", clean ? `?${clean}` : window.location.pathname);
+    }
+
     if (localStorage.getItem("isPaidUser") === "true") {
       setSubscriptionStatus("active");
     }
@@ -835,7 +844,6 @@ export default function Home() {
   };
 
   const goCheckout = () => {
-    localStorage.setItem("isPaidUser", "true");
     window.location.href = "https://buy.stripe.com/dRmaEZ63n67N46g6znefC00";
   };
 

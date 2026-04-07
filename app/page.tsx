@@ -690,6 +690,7 @@ export default function Home() {
   const [showAllLabRecords, setShowAllLabRecords] = useState(false);
   const [drinkWater, setDrinkWater] = useState(0);
   const [showRecorder, setShowRecorder] = useState(false);
+  const [freeText, setFreeText] = useState("")
   const [vitalsInput, setVitalsInput] = useState({ weight: "", bpSys: "", bpDia: "", pulse: "" });
 
   const resultRef = useRef<HTMLDivElement>(null);
@@ -1197,14 +1198,63 @@ export default function Home() {
 {!isInputLocked ? (
   <div>
     <div style={{ marginBottom: "12px" }}>
-      <button onClick={() => alert("自由入力はこれから作ります")}>
-        自由入力で追加TEST999
-      </button>
+      <button
+  onClick={() => setShowFreeInput(true)}
+  style={{
+    width: "100%",
+    padding: "12px",
+    borderRadius: "12px",
+    border: "1px solid #d1d5db",
+    background: "#fff",
+    fontSize: "14px",
+    cursor: "pointer",
+    marginBottom: 12
+  }}
+>
+  自由入力で追加
+</button>
     </div>
 
     <button onClick={() => setShowRecorder(true)}>
       ＋ 食事を記録する
     </button>
+
+    {showFreeInput && (
+  <div
+    style={{
+      marginTop: 12,
+      padding: 12,
+      border: "1px solid #ddd",
+      borderRadius: 12
+    }}
+  >
+    <input
+      type="text"
+      placeholder="食べたものを入力"
+      value={freeText}
+      onChange={(e) => setFreeText(e.target.value)}
+      style={{
+        width: "100%",
+        padding: 10,
+        marginBottom: 8
+      }}
+    />
+
+    <button
+      onClick={() => {
+        alert(`入力された内容：${freeText}`)
+        setFreeText("")
+        setShowFreeInput(false)
+      }}
+      style={{
+        width: "100%",
+        padding: 10
+      }}
+    >
+      追加する
+    </button>
+  </div>
+)}
   </div>
 ) : (
   <div>🔒 ロック表示</div>

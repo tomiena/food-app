@@ -1197,6 +1197,35 @@ export default function Home() {
               >
                 ＋ 食事を記録する
               </button>
+
+              {!isInputLocked ? (
+  <div></div>
+  {!isInputLocked ? (
+  <div>
+
+    <button
+      onClick={() => setShowRecorder(true)}
+      style={{
+        width: "100%",
+        padding: "18px",
+        fontSize: 18,
+        fontWeight: "bold",
+        background: "linear-gradient(135deg, #22c55e, #16a34a)",
+        color: "#fff",
+        border: "none",
+        borderRadius: 12,
+        cursor: "pointer",
+        marginBottom: 16
+      }}
+    >
+      ＋ 食事を記録する
+    </button>
+    <div style={{ marginTop: "12px" }}>
+  <button onClick={() => alert("自由入力はこれから作ります")}>
+    自由入力で追加
+  </button>
+</div>
+
             ) : (
               <div style={{ textAlign: "center", padding: "12px 0 16px", color: "#aaa", fontSize: 13 }}>
                 🔒 この日の記録は有料プランでご利用いただけます

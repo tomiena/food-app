@@ -743,6 +743,24 @@ export default function Home() {
   const liveTotals = calculateTotals(items, drinkWater);
 
   // ─ 今日のひとこと ─
+  <div style={{ marginBottom: "12px" }}>
+  <button
+    onClick={() => setShowFreeInput(true)}
+    style={{
+      width: "100%",
+      padding: "14px",
+      borderRadius: "12px",
+      border: "2px solid #22c55e",
+      background: "#f0fdf4",
+      fontSize: "16px",
+      fontWeight: "bold",
+      color: "#166534",
+      cursor: "pointer"
+    }}
+  >
+    自由入力で追加
+  </button>
+</div>
   function getDailyComment(): string {
     if (selectedDateMealCount === 0) {
       return "今日の記録はまだありません。\n最初の食事を記録してみましょう！";

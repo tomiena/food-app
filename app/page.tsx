@@ -1184,24 +1184,17 @@ export default function Home() {
 
             {/* ③ CTA */}
             {!isInputLocked ? (
-              <button
-                onClick={() => setShowRecorder(true)}
-                style={{
-                  width: "100%", padding: "18px",
-                  fontSize: 18, fontWeight: "bold",
-                  background: "linear-gradient(135deg, #2e7d32, #388e3c)",
-                  color: "#fff", border: "none", borderRadius: 14,
-                  cursor: "pointer", marginBottom: 16, fontFamily: FONT,
-                  boxShadow: "0 4px 14px rgba(46,125,50,0.28)",
-                }}
-              >
-                ＋ 食事を記録する
-              </button>
+              
 
-              {!isInputLocked ? (
-  <div></div>
+              
   {!isInputLocked ? (
-  <div>
+    <div>
+
+    <div style={{ marginBottom: "12px" }}>
+      <button onClick={() => alert("自由入力はこれから作ります")}>
+        自由入力で追加
+      </button>
+    </div>
 
     <button
       onClick={() => setShowRecorder(true)}
@@ -1218,20 +1211,11 @@ export default function Home() {
         marginBottom: 16
       }}
     >
-    <div style={{ marginBottom: "12px" }}>
- <div style={{ marginBottom: "12px" }}>
-  <button onClick={() => alert("自由入力はこれから作ります")}>
-    自由入力で追加
-  </button>
-</div>
-    <button onClick={() => alert("自由入力はこれから作ります")}>
-    自由入力で追加
-  </button>
-</div>
       ＋ 食事を記録する
     </button>
-    
 
+  </div>
+    
             ) : (
               <div style={{ textAlign: "center", padding: "12px 0 16px", color: "#aaa", fontSize: 13 }}>
                 🔒 この日の記録は有料プランでご利用いただけます

@@ -1187,7 +1187,7 @@ export default function Home() {
               
 
               
-  {!isInputLocked ? (
+  {true ? (
 <div style={{ marginBottom: "12px" }}>
   <button
     onClick={() => alert("自由入力はこれから作ります")}

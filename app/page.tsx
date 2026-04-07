@@ -874,7 +874,7 @@ export default function Home() {
 
       {/* ─── Sticky Header ─── */}
       <div style={{ position: "sticky", top: 0, zIndex: 10 }}>
-        {showRecorder ? (
+        {false ? (
           <div style={{ background: "#fff", borderBottom: "1px solid #f0e8d8" }}>
             {/* Recording mode toolbar */}
             <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "10px 14px 8px" }}>
@@ -930,7 +930,7 @@ export default function Home() {
       {/* ─── Main Content ─── */}
       <div style={{ padding: "14px 12px 120px" }}>
 
-        {showRecorder ? (
+        {false ? (
           /* ═══ 記録モード ═══ */
           <>
             {/* Live summary */}

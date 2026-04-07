@@ -1224,7 +1224,7 @@ export default function Home() {
         boxShadow: "0 4px 14px rgba(46,125,50,0.28)",
       }}
     >
-      ＋ 食事を記録する
+      ＋ 自由入力で追加食事を記録する
     </button>
   </div>
             ) : (

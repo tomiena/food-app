@@ -1219,7 +1219,12 @@ export default function Home() {
       }}
     >
     <div style={{ marginBottom: "12px" }}>
+ <div style={{ marginBottom: "12px" }}>
   <button onClick={() => alert("自由入力はこれから作ります")}>
+    自由入力で追加
+  </button>
+</div>
+    <button onClick={() => alert("自由入力はこれから作ります")}>
     自由入力で追加
   </button>
 </div>

@@ -868,6 +868,8 @@ export default function Home() {
   const cat = CATEGORIES[tab];
 
   return (
+  <>
+    <h1>ここテスト123</h1>
     <main style={{ width: "100%", maxWidth: 500, margin: "0 auto", fontFamily: FONT, background: "#fdf8f0", minHeight: "100vh" }}>
 
       {/* ─── Sticky Header ─── */}

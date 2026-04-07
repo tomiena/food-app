@@ -1175,66 +1175,40 @@ export default function Home() {
             </div>
 
             {/* ② 今日のひとこと */}
-            <div style={{ background: "#fdf5eb", borderRadius: 14, padding: "14px 16px", marginBottom: 14, border: "1px solid #f0ddb0" }}>
-              <div style={{ fontSize: 12, color: "#c17a3a", fontWeight: "bold", marginBottom: 6 }}>💬 今日のひとこと</div>
-              <p style={{ fontSize: 15, color: "#5c3d1e", lineHeight: 1.85, margin: 0, whiteSpace: "pre-line" }}>
-                {getDailyComment()}
-              </p>
-            </div>
+<div>
+  <div style={{ fontSize: 12, color: "#c17a3a", fontWeight: "bold", marginBottom: 6 }}>
+    💬 今日のひとこと
+  </div>
 
-            {/* ③ CTA */}
-            {!isInputLocked ? (
-              
-              {/* ③ CTA */}
-            {!isInputLocked ? (
-              <div>
-                <div style={{ marginBottom: "12px" }}>
-                  <button
-                    onClick={() => alert("自由入力はこれから作ります")}
-                    style={{
-                      width: "100%",
-                      padding: "12px",
-                      borderRadius: "12px",
-                      border: "1px solid #d1d5db",
-                      background: "#fff",
-                      fontSize: "14px",
-                      cursor: "pointer",
-                    }}
-                  >
-                    自由入力で追加TEST999
-                  </button>
-                </div>
+  <p
+    style={{
+      fontSize: 15,
+      color: "#5c3d1e",
+      lineHeight: 1.85,
+      margin: 0,
+      whiteSpace: "pre-line",
+    }}
+  >
+    {getDailyComment()}
+  </p>
+</div>
 
-                <button
-                  onClick={() => setShowRecorder(true)}
-                  style={{
-                    width: "100%",
-                    padding: "18px",
-                    fontSize: 18,
-                    fontWeight: "bold",
-                    background: "linear-gradient(135deg, #22c55e, #16a34a)",
-                    color: "#fff",
-                    border: "none",
-                    borderRadius: 12,
-                    cursor: "pointer",
-                    marginBottom: 16,
-                  }}
-                >
-                  ＋ 食事を記録する
-                </button>
-              </div>
-            ) : (
-              <div
-                style={{
-                  textAlign: "center",
-                  padding: "12px 0 16px",
-                  color: "#aaa",
-                  fontSize: 13,
-                }}
-              >
-                🔒 この日の記録は有料プランでご利用いただけます
-              </div>
-            )}
+{/* ③ CTA */}
+{!isInputLocked ? (
+  <div>
+    <div style={{ marginBottom: "12px" }}>
+      <button onClick={() => alert("自由入力はこれから作ります")}>
+        自由入力で追加TEST999
+      </button>
+    </div>
+
+    <button onClick={() => setShowRecorder(true)}>
+      ＋ 食事を記録する
+    </button>
+  </div>
+) : (
+  <div>🔒 ロック表示</div>
+)}
 
             {/* Upsell banner */}
             {showPremiumActivated && (

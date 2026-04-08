@@ -93,13 +93,22 @@ return "bg-green-100 text-green-700";
       <div className="mx-auto max-w-md space-y-6">
         <h1 className="text-2xl font-bold">食事チェック</h1>
 
-        <button
-          type="button"
-          onClick={handleClick}
-          className="rounded-xl bg-blue-600 px-4 py-3 text-white shadow hover:opacity-90"
-        >
-          ＋ 食事を記録する
-        </button>
+        <div className="flex flex-wrap gap-2">
+          <button
+            type="button"
+            onClick={handleClick}
+            className="rounded-xl bg-blue-600 px-4 py-3 text-white shadow hover:opacity-90"
+          >
+            ＋ 食事を記録する
+          </button>
+          <button
+            type="button"
+            onClick={() => setShowForm(true)}
+            className="rounded-xl border border-gray-300 bg-white px-4 py-3 text-gray-600 shadow-sm hover:opacity-80"
+          >
+            自由入力で追加
+          </button>
+        </div>
 
         {showForm && (
           <div className="rounded-2xl border p-4 shadow-sm space-y-3">

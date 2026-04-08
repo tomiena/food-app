@@ -1,4 +1,5 @@
 import Image from "next/image";
+import PremiumButton from "@/app/components/PremiumButton";
 
 export default function LP() {
   return (
@@ -221,7 +222,8 @@ export default function LP() {
 
       {/* ⑦ 料金 */}
       <section className="px-6 pb-16 text-center">
-        <p className="text-gray-400 text-xs">
+        <PremiumButton />
+        <p className="mt-3 text-gray-400 text-xs">
           ※無料で使えます（プレミアム機能は準備中）
         </p>
       </section>

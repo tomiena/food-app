@@ -2,7 +2,7 @@
 
 export default function PremiumButton() {
   const handleClick = async () => {
-    const res = await fetch("/api/stripe/checkout", {
+    const res = await fetch("/api/checkout", {
       method: "POST",
     });
 

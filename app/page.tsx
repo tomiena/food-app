@@ -4,6 +4,7 @@ import Image from "next/image";
 import { useState } from "react";
 import { judgeMeal, type MealItem } from "@/lib/judge";
 import { FOODS } from "@/lib/foods";
+import PremiumButton from "@/app/components/PremiumButton";
 
 const aliasMap: Record<string, string> = {
   "ご飯": "白米",
@@ -109,6 +110,8 @@ return "bg-green-100 text-green-700";
             自由入力で追加
           </button>
         </div>
+
+        <PremiumButton />
 
         {showForm && (
           <div className="rounded-2xl border p-4 shadow-sm space-y-3">

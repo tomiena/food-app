@@ -3,9 +3,9 @@ import Stripe from "stripe";
 
 export async function POST() {
   // ── 環境変数チェック ──────────────────────────────────────
-  const secretKey  = process.env.STRIPE_SECRET_KEY;
-  const priceId    = process.env.STRIPE_PRICE_ID;
-  const appUrl     = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
+  const secretKey = process.env.STRIPE_SECRET_KEY;
+  const priceId   = process.env.STRIPE_PRICE_ID;
+  const appUrl    = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
 
   if (!secretKey) {
     console.error("[checkout] STRIPE_SECRET_KEY が未設定です");
@@ -22,11 +22,11 @@ export async function POST() {
     );
   }
 
-  // ── Stripe セッション作成 ─────────────────────────────────
+  // ── Stripe セッション作成（買い切り） ─────────────────────
   try {
     const stripe  = new Stripe(secretKey);
     const session = await stripe.checkout.sessions.create({
-      mode: "subscription",
+      mode: "payment",
       line_items: [{ price: priceId, quantity: 1 }],
       success_url: `${appUrl}/success`,
       cancel_url:  `${appUrl}/cancel`,

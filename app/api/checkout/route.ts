@@ -13,8 +13,8 @@ export async function POST() {
           quantity: 1,
         },
       ],
-      success_url: `${process.env.NEXT_PUBLIC_APP_URL}/premium/success`,
-      cancel_url: `${process.env.NEXT_PUBLIC_APP_URL}/premium/cancel`,
+      success_url: `${process.env.NEXT_PUBLIC_APP_URL}/success`,
+      cancel_url: `${process.env.NEXT_PUBLIC_APP_URL}/cancel`,
     });
 
     return NextResponse.json({ url: session.url });

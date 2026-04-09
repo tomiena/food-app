@@ -93,8 +93,10 @@ function ResultContent() {
   const searchParams = useSearchParams();
   const savedRef = useRef(false);
 
-  const foodsParam = searchParams.get("foods") ?? "";
-  const dateParam  = searchParams.get("date")  ?? toDateStr(new Date());
+  const foodsParam   = searchParams.get("foods")   ?? "";
+  const dateParam    = searchParams.get("date")    ?? toDateStr(new Date());
+  const unknownParam = searchParams.get("unknown") ?? "";
+  const unknownFoods = unknownParam.split(",").filter(Boolean);
 
   const items: MealItem[] = foodsParam
     .split(",")
@@ -120,7 +122,7 @@ function ResultContent() {
       ? "bg-yellow-50 border-yellow-300 text-yellow-700"
       : "bg-teal-50 border-teal-300 text-teal-700";
 
-  // 自動保存
+  // 自動保存（matched items がある場合のみ）
   useEffect(() => {
     if (savedRef.current || !result || !totals || items.length === 0) return;
     savedRef.current = true;
@@ -134,15 +136,13 @@ function ResultContent() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  if (items.length === 0) {
+  // 栄養データなし＋未登録食品もなし → 選択画面へ
+  if (items.length === 0 && unknownFoods.length === 0) {
     return (
       <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center gap-4 p-6">
         <p className="text-gray-500">食品データが見つかりません</p>
-        <button
-          type="button"
-          onClick={() => router.push("/meal")}
-          className="rounded-xl bg-teal-600 px-6 py-3 text-white font-semibold"
-        >
+        <button type="button" onClick={() => router.push("/meal")}
+          className="rounded-xl bg-teal-600 px-6 py-3 text-white font-semibold">
           食事選択に戻る
         </button>
       </div>
@@ -173,18 +173,35 @@ function ResultContent() {
       <div className="mx-auto max-w-md px-4 py-5 space-y-4">
 
         {/* ── 選んだ食品 ────────────────────────────────────── */}
-        <section className="bg-white rounded-2xl border shadow-sm p-4">
-          <p className="text-sm font-semibold text-gray-600 mb-2">選んだ食品</p>
-          <div className="flex flex-wrap gap-2">
-            {items.map((item, i) => (
-              <span
-                key={i}
-                className="inline-flex items-center bg-gray-100 text-gray-700 text-sm px-3 py-1 rounded-full"
-              >
-                {item.food.name}
-              </span>
-            ))}
-          </div>
+        <section className="bg-white rounded-2xl border shadow-sm p-4 space-y-2">
+          {items.length > 0 && (
+            <>
+              <p className="text-sm font-semibold text-gray-600">選んだ食品</p>
+              <div className="flex flex-wrap gap-2">
+                {items.map((item, i) => (
+                  <span key={i} className="inline-flex items-center bg-gray-100 text-gray-700 text-sm px-3 py-1 rounded-full">
+                    {item.food.name}
+                  </span>
+                ))}
+              </div>
+            </>
+          )}
+
+          {/* 未登録食品 */}
+          {unknownFoods.length > 0 && (
+            <div className={items.length > 0 ? "pt-2 border-t" : ""}>
+              <p className="text-xs font-semibold text-gray-400 mb-1.5">
+                未登録の食品（栄養計算に含まれていません）
+              </p>
+              <div className="flex flex-wrap gap-1.5">
+                {unknownFoods.map((u) => (
+                  <span key={u} className="text-xs bg-gray-100 text-gray-500 px-3 py-1 rounded-full">
+                    {u}
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
         </section>
 
         {/* ── 総合判定 ──────────────────────────────────────── */}

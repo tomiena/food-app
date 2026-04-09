@@ -187,7 +187,7 @@ export default function HomePage() {
             食事を記録する
           </Link>
           <Link
-            href="/meal"
+            href="/meal?mode=free"
             className="flex-none rounded-2xl border-2 border-teal-500 px-5 py-4 text-center text-teal-700 text-sm font-semibold hover:bg-teal-50 active:scale-[0.98] transition-all whitespace-nowrap"
           >
             自由入力する

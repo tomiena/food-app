@@ -7,27 +7,27 @@ import { FOODS, type FoodCategory } from "@/lib/foods";
 import FoodCard from "@/app/components/FoodCard";
 
 // ─── カテゴリ定義 ────────────────────────────────────────────
-const CATEGORIES: { id: FoodCategory | "all"; label: string }[] = [
+type CategoryId = FoodCategory | "all" | "meat_fish";
+
+const CATEGORIES: { id: CategoryId; label: string }[] = [
   { id: "all",          label: "すべて" },
   { id: "grain",        label: "主食・麺" },
   { id: "soup",         label: "汁物" },
-  { id: "prepared_food",label: "惣菜" },
-  { id: "meat",         label: "肉類" },
-  { id: "fish",         label: "魚介" },
-  { id: "dairy_egg_soy",label: "卵・大豆・乳" },
-  { id: "vegetable",    label: "野菜" },
   { id: "drink",        label: "飲み物" },
-  { id: "seasoning",    label: "調味料" },
+  { id: "prepared_food",label: "惣菜" },
+  { id: "meat_fish",    label: "肉・魚" },
 ];
 
 export default function MealPage() {
   const router = useRouter();
-  const [activeCategory, setActiveCategory] = useState<FoodCategory | "all">("all");
+  const [activeCategory, setActiveCategory] = useState<CategoryId>("all");
   const [selected, setSelected]             = useState<Set<string>>(new Set());
 
   const displayFoods = activeCategory === "all"
     ? FOODS
-    : FOODS.filter((f) => f.category === activeCategory);
+    : activeCategory === "meat_fish"
+      ? FOODS.filter((f) => f.category === "meat" || f.category === "fish")
+      : FOODS.filter((f) => f.category === activeCategory);
 
   const toggle = (id: string) => {
     setSelected((prev) => {

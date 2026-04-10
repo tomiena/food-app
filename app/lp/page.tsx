@@ -215,9 +215,14 @@ export default function LP() {
           <div className="text-center pt-2 pb-6">
             <button
               onClick={handleCheckout}
-              className="mt-6 w-full max-w-md bg-teal-600 hover:bg-teal-700 text-white font-semibold py-4 px-8 rounded-full shadow-md transition mx-auto block"
+              className="mt-6 w-full max-w-md bg-teal-600 hover:bg-teal-700 text-white font-semibold py-4 px-8 rounded-full shadow-md transition mx-auto block text-center leading-tight"
             >
-              必要な方はこちら
+              <span className="block text-base">
+                追加機能の料金 ¥500（買い切り）
+              </span>
+              <span className="block text-sm opacity-90">
+                毎月の課金はありません。
+              </span>
             </button>
             <p className="mt-2 text-xs text-gray-400">¥500 / 買い切り・返金不可</p>
           </div>

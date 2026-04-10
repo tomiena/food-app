@@ -196,15 +196,6 @@ export default function LP() {
             </ul>
           </div>
 
-          <div className="rounded-2xl border border-gray-200 px-5 py-6 text-center space-y-1">
-            <p className="text-xs text-gray-400">追加機能の料金</p>
-            <p className="text-4xl font-bold text-gray-800">
-              ¥500
-              <span className="text-base font-normal text-gray-400 ml-2">買い切り</span>
-            </p>
-            <p className="text-xs text-gray-400">毎月の課金はありません。</p>
-          </div>
-
           <p className="text-sm text-gray-500 leading-relaxed text-center">
             まずは無料版をそのままお使いください。
             <br />

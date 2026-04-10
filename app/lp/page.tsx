@@ -2,12 +2,8 @@
 
 const handleCheckout = async () => {
   try {
-    const res = await fetch("/api/checkout", {
-      method: "POST",
-    });
-
+    const res = await fetch("/api/checkout", { method: "POST" });
     const data = await res.json();
-
     if (data.url) {
       window.location.href = data.url;
     } else {
@@ -21,21 +17,21 @@ const handleCheckout = async () => {
 
 export default function LP() {
   return (
-    <main className="bg-gradient-to-b from-teal-50 to-white text-gray-800">
+    <main className="bg-white text-gray-800 font-sans">
 
       {/* ① ヒーロー */}
-      <section className="px-6 pt-20 pb-14 text-center">
-        <p className="inline-block text-teal-700 font-semibold text-sm tracking-wide bg-teal-100 px-4 py-1 rounded-full mb-5">
+      <section className="bg-gradient-to-b from-teal-50 to-white px-6 pt-20 pb-16 text-center">
+        <span className="inline-block text-teal-700 font-semibold text-xs tracking-widest bg-teal-100 px-4 py-1.5 rounded-full mb-6">
           透析患者さんの食事サポート
-        </p>
+        </span>
 
-        <h1 className="text-3xl font-bold leading-snug">
+        <h1 className="text-3xl md:text-4xl font-bold leading-snug text-gray-900">
           「これ食べて大丈夫？」
           <br />
           <span className="text-teal-600">その不安、3秒で解決</span>
         </h1>
 
-        <p className="mt-5 text-gray-600 leading-relaxed">
+        <p className="mt-5 text-gray-500 leading-relaxed text-base">
           食べたものを選ぶだけで
           <br />
           塩分・カリウム・リンをすぐ判定
@@ -43,22 +39,20 @@ export default function LP() {
 
         <a
           href="/"
-          className="inline-block mt-8 bg-teal-600 hover:bg-teal-700 text-white font-semibold px-8 py-4 rounded-xl shadow-md text-base transition-colors"
+          className="inline-block mt-8 bg-teal-600 hover:bg-teal-700 active:scale-95 text-white font-semibold px-8 py-4 rounded-xl shadow-md text-base transition-all"
         >
           今すぐ無料でチェックする
         </a>
-
         <p className="mt-3 text-xs text-gray-400">登録不要・無料で使えます</p>
       </section>
 
       {/* ② 共感 */}
-      <section className="px-6 py-12 bg-white">
+      <section className="px-6 py-14 bg-white">
         <div className="max-w-md mx-auto">
-          <h2 className="text-lg font-bold text-center mb-6 text-gray-700">
+          <h2 className="text-xl font-bold text-center text-gray-800 mb-8">
             こんな悩み、ありませんか？
           </h2>
-
-          <ul className="space-y-4">
+          <ul className="space-y-3">
             {[
               "食べてから不安になる",
               "調べてもよく分からない",
@@ -66,100 +60,65 @@ export default function LP() {
             ].map((text) => (
               <li
                 key={text}
-                className="flex items-center gap-3 bg-teal-50 rounded-xl px-5 py-4 shadow-sm"
+                className="flex items-center gap-3 bg-teal-50 border border-teal-100 rounded-xl px-5 py-4"
               >
-                <span className="text-teal-500 font-bold text-lg">✔</span>
-                <span className="text-gray-700">{text}</span>
+                <span className="w-5 h-5 rounded-full bg-teal-500 text-white text-xs flex items-center justify-center flex-shrink-0">✓</span>
+                <span className="text-gray-700 font-medium">{text}</span>
               </li>
             ))}
           </ul>
-
-          <p className="mt-8 text-lg font-bold text-center text-teal-700">
-            👉 その悩み、なくせます
+          <p className="mt-8 text-center font-bold text-teal-600 text-lg">
+            その悩み、なくせます
           </p>
         </div>
       </section>
 
-      {/* ③ 想い */}
-      <section className="px-6 py-14 bg-teal-600 text-white">
-        <div className="max-w-md mx-auto">
-          <p className="text-sm font-semibold tracking-widest opacity-80 mb-4 text-center">
-            このアプリについて
+      {/* ③ このアプリについて */}
+      <section className="bg-teal-600 text-white px-6 py-16">
+        <div className="max-w-md mx-auto space-y-5">
+          <p className="text-xs font-semibold tracking-widest opacity-70 text-center uppercase">
+            About this app
           </p>
-
-          <p className="leading-loose text-[1rem]">
-            このアプリは、
+          <h2 className="text-xl font-bold text-center">このアプリについて</h2>
+          <p className="leading-relaxed text-teal-50 text-[0.95rem]">
+            このアプリは、透析患者さんの「食事の不安」を
             <br />
-            透析患者さんの「食事の不安」を減らすために作りました。
+            減らすために作りました。
           </p>
-
-          <p className="mt-6 leading-loose text-[1rem]">
-            毎回、
-            <br />
+          <p className="leading-relaxed text-teal-50 text-[0.95rem]">
             「これ食べていいのかな」
+            「体に影響が出ないかな」
             <br />
-            「あとで体に影響出ないかな」
-          </p>
-
-          <p className="mt-6 leading-loose text-[1rem]">
             そんな不安を抱えながら食事をしている方を、
-            <br />
             私はたくさん見てきました。
           </p>
-
-          <p className="mt-6 leading-loose text-[1rem] font-semibold">
-            だからこそ、
-            <br />
-            「食べたあとに安心できる仕組み」を作りたいと思いました。
+          <p className="leading-relaxed font-semibold text-white text-[0.95rem]">
+            だからこそ、食べたあとに安心できる仕組みを作りたいと思いました。
           </p>
         </div>
       </section>
 
       {/* ④ スクリーンショット */}
       <section className="py-14">
-        <h2 className="text-xl font-bold mb-8 text-center px-6">
+        <h2 className="text-xl font-bold text-center px-6 mb-8 text-gray-800">
           食べた結果がすぐ分かる
         </h2>
 
-        <div className="flex gap-4 overflow-x-auto snap-x snap-mandatory px-6 pb-4 scrollbar-hide">
-          <div className="flex-none w-64 snap-center">
-            <div className="rounded-2xl shadow-md border bg-white overflow-hidden">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src="/screenshots/result-main.png"
-                className="w-full h-auto"
-                alt="ナトリウム・カリウム・リンの判定結果画面"
-              />
+        <div className="flex gap-4 overflow-x-auto snap-x snap-mandatory px-6 pb-4">
+          {[
+            { src: "/screenshots/result.png",  title: "食べた後、すぐ判定", sub: "色でパッと分かる" },
+            { src: "/screenshots/select.png",  title: "食材を選ぶだけ",     sub: "入力は30秒以内" },
+            { src: "/screenshots/advice.png",  title: "アドバイスも表示",   sub: "次の食事に活かせる" },
+          ].map(({ src, title, sub }) => (
+            <div key={src} className="flex-none w-56 snap-center">
+              <div className="rounded-2xl shadow-md border border-gray-100 bg-white overflow-hidden">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={src} className="w-full h-auto" alt={title} />
+              </div>
+              <p className="mt-3 text-sm font-semibold text-gray-700 text-center">{title}</p>
+              <p className="text-xs text-gray-400 text-center mt-0.5">{sub}</p>
             </div>
-            <p className="mt-3 text-sm font-semibold text-gray-700 text-center">食べた後、すぐ判定</p>
-            <p className="text-xs text-gray-400 text-center mt-1">色でパッと分かる</p>
-          </div>
-
-          <div className="flex-none w-64 snap-center">
-            <div className="rounded-2xl shadow-md border bg-white overflow-hidden">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src="/screenshots/select.png"
-                className="w-full h-auto"
-                alt="食材を選んで判定する操作画面"
-              />
-            </div>
-            <p className="mt-3 text-sm font-semibold text-gray-700 text-center">食材を選ぶだけ</p>
-            <p className="text-xs text-gray-400 text-center mt-1">入力は30秒以内</p>
-          </div>
-
-          <div className="flex-none w-64 snap-center">
-            <div className="rounded-2xl shadow-md border bg-white overflow-hidden">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src="/screenshots/result-trust.png"
-                className="w-full h-auto"
-                alt="塩分・カリウム・リンの詳細判定とアドバイス表示"
-              />
-            </div>
-            <p className="mt-3 text-sm font-semibold text-gray-700 text-center">アドバイスも表示</p>
-            <p className="text-xs text-gray-400 text-center mt-1">次の食事に活かせる</p>
-          </div>
+          ))}
         </div>
 
         <p className="text-center text-xs text-gray-400 mt-2">← スワイプで確認 →</p>
@@ -167,7 +126,7 @@ export default function LP() {
         <div className="text-center mt-10 px-6">
           <a
             href="/"
-            className="inline-block bg-teal-600 hover:bg-teal-700 text-white font-semibold px-8 py-4 rounded-xl shadow-md text-base transition-colors"
+            className="inline-block bg-teal-600 hover:bg-teal-700 active:scale-95 text-white font-semibold px-8 py-4 rounded-xl shadow-md text-base transition-all"
           >
             今すぐ無料でチェックする
           </a>
@@ -175,13 +134,12 @@ export default function LP() {
       </section>
 
       {/* ⑤ ベネフィット */}
-      <section className="px-6 py-12 bg-teal-50">
+      <section className="bg-teal-50 px-6 py-14">
         <div className="max-w-md mx-auto">
-          <h2 className="text-lg font-bold text-center mb-6 text-gray-700">
+          <h2 className="text-xl font-bold text-center text-gray-800 mb-8">
             使い続けると、こう変わる
           </h2>
-
-          <ul className="space-y-4">
+          <ul className="space-y-3">
             {[
               { icon: "🧘", text: "迷わなくなる" },
               { icon: "🧠", text: "考えなくていい" },
@@ -189,7 +147,7 @@ export default function LP() {
             ].map(({ icon, text }) => (
               <li
                 key={text}
-                className="flex items-center gap-4 bg-white rounded-xl px-5 py-4 shadow-sm"
+                className="flex items-center gap-4 bg-white rounded-xl px-5 py-4 shadow-sm border border-teal-100"
               >
                 <span className="text-2xl">{icon}</span>
                 <span className="font-semibold text-gray-700">{text}</span>
@@ -199,103 +157,65 @@ export default function LP() {
         </div>
       </section>
 
-      {/* ⑥ 最終CTA */}
-      <section className="px-6 py-16 text-center">
-        <h2 className="text-2xl font-bold leading-snug">
-          今日から、
-          <br />
-          <span className="text-teal-600">安心して食べよう。</span>
-        </h2>
-
-        <p className="mt-4 text-gray-500 text-sm">
-          登録不要。すぐ使えます。
-        </p>
-
-        <a
-          href="/"
-          className="inline-block mt-8 bg-teal-600 hover:bg-teal-700 text-white font-semibold px-10 py-4 rounded-xl shadow-md text-base transition-colors"
-        >
-          今すぐ無料でチェックする
-        </a>
-      </section>
-
-      {/* ⑦ 追加機能について */}
-      <section className="px-6 pb-20 bg-white">
-        <div className="max-w-md mx-auto space-y-8">
-
-          {/* タイトル・リード文 */}
-          <div className="pt-10 text-center">
+      {/* ⑥ 追加機能 */}
+      <section className="px-6 py-14 bg-white">
+        <div className="max-w-md mx-auto space-y-6">
+          <div className="text-center">
             <h2 className="text-xl font-bold text-gray-800">追加機能について</h2>
-            <p className="mt-4 text-gray-500 text-sm leading-loose">
-              このアプリは、基本機能を無料でお使いいただけます。
-              <br />
-              まずは無料で続けていただき、
+            <p className="mt-3 text-sm text-gray-500 leading-relaxed">
+              基本機能は無料でお使いいただけます。
               <br />
               必要な方のみ追加機能をご利用ください。
             </p>
           </div>
 
-          {/* 無料でできること */}
           <div className="rounded-2xl border border-gray-100 bg-gray-50 px-5 py-5">
             <p className="text-sm font-bold text-gray-700 mb-3">無料でできること</p>
             <ul className="space-y-2">
-              {[
-                "食事の記録",
-                "栄養の確認",
-                "日々の振り返り",
-              ].map((item) => (
-                <li key={item} className="flex items-start gap-2 text-sm text-gray-600">
-                  <span className="text-teal-500 mt-0.5">✓</span>
-                  {item}
+              {["食事の記録", "栄養の確認", "日々の振り返り"].map((item) => (
+                <li key={item} className="flex items-center gap-2 text-sm text-gray-600">
+                  <span className="text-teal-500">✓</span>{item}
                 </li>
               ))}
             </ul>
           </div>
 
-          {/* 追加機能でできること */}
           <div className="rounded-2xl border border-teal-100 bg-teal-50 px-5 py-5">
             <p className="text-sm font-bold text-teal-700 mb-3">追加機能でできること</p>
             <ul className="space-y-2">
-              {[
-                "より便利な記録サポート",
-                "振り返りのしやすさ向上",
-                "継続しやすくなる補助機能",
-              ].map((item) => (
-                <li key={item} className="flex items-start gap-2 text-sm text-gray-600">
-                  <span className="text-teal-400 mt-0.5">＋</span>
-                  {item}
+              {["記録サポートの強化", "振り返り機能の向上", "継続を支援する補助機能"].map((item) => (
+                <li key={item} className="flex items-center gap-2 text-sm text-gray-600">
+                  <span className="text-teal-400">＋</span>{item}
                 </li>
               ))}
             </ul>
           </div>
 
-          {/* 料金 */}
-          <div className="rounded-2xl border border-gray-200 px-5 py-5 text-center space-y-1">
+          <div className="rounded-2xl border border-gray-200 px-5 py-6 text-center space-y-1">
             <p className="text-xs text-gray-400">追加機能の料金</p>
-            <p className="text-3xl font-bold text-gray-800">
+            <p className="text-4xl font-bold text-gray-800">
               ¥500
               <span className="text-base font-normal text-gray-400 ml-2">買い切り</span>
             </p>
             <p className="text-xs text-gray-400">毎月の課金はありません。</p>
           </div>
 
-          {/* 締めの言葉 */}
-          <p className="text-sm text-gray-500 leading-loose text-center px-2">
-            まずは無料版をそのままお使いいただいて大丈夫です。
+          <p className="text-sm text-gray-500 leading-relaxed text-center">
+            まずは無料版をそのままお使いください。
             <br />
             必要になったときに、いつでもご利用いただけます。
           </p>
 
-          {/* ボタン */}
-          <div className="text-center pb-4">
+          {/* ⑦ Stripe CTA */}
+          <div className="text-center pt-2 pb-6">
             <button
               onClick={handleCheckout}
-              className="bg-teal-600 hover:bg-teal-700 text-white font-semibold py-4 px-8 rounded-xl shadow-md transition"
+              className="w-full bg-teal-600 hover:bg-teal-700 active:scale-95 text-white font-semibold py-4 px-8 rounded-xl shadow-md transition-all text-base"
             >
               必要な方はこちら
             </button>
+            <p className="mt-2 text-xs text-gray-400">¥500 / 買い切り・返金不可</p>
           </div>
-
         </div>
       </section>
 

@@ -157,19 +157,9 @@ function ResultContent() {
 
       {/* ── ヘッダー ──────────────────────────────────────── */}
       <header className="bg-white border-b px-5 py-4 sticky top-0 z-10 shadow-sm">
-        <div className="mx-auto max-w-md flex items-center gap-3">
-          <button
-            type="button"
-            onClick={() => router.back()}
-            className="text-2xl leading-none text-gray-500 hover:text-gray-700"
-            aria-label="戻る"
-          >
-            ←
-          </button>
-          <div>
-            <h1 className="text-xl font-bold text-gray-800">栄養評価</h1>
-            <p className="text-xs text-gray-400">{localDateLabel(dateParam)} の記録</p>
-          </div>
+        <div className="mx-auto max-w-md text-center">
+          <h1 className="text-xl font-bold text-gray-800">栄養評価</h1>
+          <p className="text-sm text-gray-500">{localDateLabel(dateParam)} の記録</p>
         </div>
       </header>
 
@@ -347,20 +337,13 @@ function ResultContent() {
 
       {/* ── 下部ボタン ────────────────────────────────────── */}
       <div className="fixed bottom-0 left-0 right-0 bg-white border-t px-4 py-4 shadow-lg">
-        <div className="mx-auto max-w-md flex gap-3">
-          <button
-            type="button"
-            onClick={() => router.push("/meal")}
-            className="rounded-2xl border border-gray-300 px-5 py-3 text-gray-600 font-semibold hover:bg-gray-50 transition-colors"
-          >
-            食事選択
-          </button>
+        <div className="mx-auto max-w-md">
           <button
             type="button"
             onClick={() => router.push("/")}
-            className="flex-1 rounded-2xl bg-teal-600 py-4 text-white text-base font-bold shadow-md hover:bg-teal-700 active:scale-[0.98] transition-all"
+            className="w-full rounded-2xl bg-teal-600 py-4 text-white text-base font-bold shadow-md hover:bg-teal-700 active:scale-[0.98] transition-all"
           >
-            ホームへ戻る
+            食事選択へ戻る
           </button>
         </div>
       </div>

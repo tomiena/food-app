@@ -81,6 +81,33 @@ const FOOD_ALIASES: Record<string, string> = {
   // 汁物
   "みそ汁": "miso_soup", "味噌汁": "miso_soup", "とん汁": "tonjiru",
   "豚汁": "tonjiru",     "すまし汁": "clear_soup",
+  // 飲み物追加
+  "低脂肪乳": "low_fat_milk", "豆乳": "soy_milk",       "飲むヨーグルト": "drinking_yogurt",
+  "スポーツドリンク": "sports_drink",                    "炭酸水": "sparkling_water",
+  "レモン水": "lemon_water",  "乳酸菌飲料": "lactic_drink", "ヤクルト": "lactic_drink",
+  "ミルクティー": "milk_tea", "缶コーヒー": "canned_coffee","野菜スムージー": "veggie_smoothie",
+  "スムージー": "veggie_smoothie",
+  // 肉追加
+  "鶏ささみ": "chicken_sasami", "ささみ": "chicken_sasami",
+  "手羽先": "chicken_wing_tip", "手羽元": "chicken_wing_root",
+  "鶏ひき肉": "ground_chicken",
+  "豚こま": "pork_thin",        "豚バラ": "pork_belly",   "豚ロース": "pork_loin",
+  "牛こま": "beef_thin",        "牛薄切り": "beef_sliced", "合いびき": "mixed_ground",
+  "合いびき肉": "mixed_ground", "ベーコン": "bacon",       "ソーセージ": "sausage",
+  "つくね": "tsukune",
+  // 魚追加
+  "焼き鮭": "grilled_salmon",  "塩鮭": "salted_salmon",  "塩さけ": "salted_salmon",
+  "焼きさば": "grilled_mackerel",
+  "あじ": "aji",               "ぶり": "buri",            "たら": "tara",
+  "さんま": "sanma",           "ししゃも": "shishamo",    "しらす": "shirasu",
+  "ツナ缶": "tuna_can",        "ツナ": "tuna_can",        "さば缶": "mackerel_can",
+  "いわし缶": "sardine_can",   "たこ": "tako",
+  // 素材
+  "厚揚げ": "atsuage",         "きのこ": "mushroom",      "しめじ": "mushroom",
+  "えのき": "mushroom",        "わかめ": "wakame",
+  // 調味料追加
+  "減塩醤油": "reduced_salt_soy", "ポン酢": "ponzu",     "ソース": "worcester_sauce",
+  "めんつゆ": "mentsuyu",
   // 丼もの
   "親子丼": "oyako_don", "牛丼": "gyudon",     "カツ丼": "katsudon",
   "天丼": "tendon",      "中華丼": "chuka_don", "そぼろ丼": "soboro_don",
@@ -444,15 +471,16 @@ export default function MealPage() {
       {/* ── カテゴリタブ（select モードのみ sticky）──────────── */}
       {mode === "select" && (
         <div className="sticky top-[57px] z-10 bg-white border-b mt-2">
-          <div className="mx-auto max-w-md overflow-x-auto flex gap-2 px-4 py-2">
+          <div className="mx-auto max-w-md overflow-x-auto flex gap-2 pl-4 pr-4 py-2">
             {CATEGORIES.map(({ id, label }) => (
               <button key={id} type="button" onClick={() => setActiveCategory(id)}
-                className={`flex-shrink-0 px-4 py-2 rounded-full text-sm font-semibold transition-colors ${
+                className={`flex-shrink-0 px-4 py-2 rounded-full text-sm font-semibold transition-colors whitespace-nowrap ${
                   activeCategory === id ? "bg-teal-600 text-white" : "bg-gray-100 text-gray-600 hover:bg-gray-200"
                 }`}>
                 {label}
               </button>
             ))}
+            <div className="w-4 flex-shrink-0" aria-hidden="true" />
           </div>
         </div>
       )}

@@ -81,6 +81,34 @@ const FOOD_ALIASES: Record<string, string> = {
   // 汁物
   "みそ汁": "miso_soup", "味噌汁": "miso_soup", "とん汁": "tonjiru",
   "豚汁": "tonjiru",     "すまし汁": "clear_soup",
+  // 丼もの
+  "親子丼": "oyako_don", "牛丼": "gyudon",     "カツ丼": "katsudon",
+  "天丼": "tendon",      "中華丼": "chuka_don", "そぼろ丼": "soboro_don",
+  "海鮮丼": "kaisen_don",
+  // ごはん系
+  "おかゆ": "okayu",     "お粥": "okayu",       "雑炊": "zosui",
+  "炊き込みご飯": "takikomi_gohan",              "ちらし寿司": "chirashi_sushi",
+  "ちらし": "chirashi_sushi",                    "巻き寿司": "maki_sushi",
+  "巻き寿": "maki_sushi",
+  // 鶏肉料理
+  "照り焼きチキン": "teriyaki_chicken",          "照り焼き": "teriyaki_chicken",
+  "焼き鳥": "yakitori",  "やきとり": "yakitori", "鶏の塩焼き": "shio_yaki_chicken",
+  "塩焼き": "shio_yaki_chicken",                 "チキン南蛮": "chicken_nanban",
+  "蒸し鶏": "mushi_chicken",                     "チキンカツ": "chicken_katsu",
+  "親子煮": "oyako_ni",
+  // 卵料理
+  "ゆで卵": "boiled_egg",  "茹で卵": "boiled_egg",  "だし巻き卵": "dashi_maki_egg",
+  "だし巻き": "dashi_maki_egg",                  "スクランブルエッグ": "scrambled_egg",
+  "茶碗蒸し": "chawanmushi",                     "オムレツ": "omelet",
+  // 漬物
+  "たくあん": "takuan",    "しば漬け": "shibazuke", "きゅうり漬け": "kyuri_tsuke",
+  "白菜漬け": "hakusai_tsuke",                   "野沢菜": "nozawana",
+  "梅干し": "umeboshi",    "キムチ": "kimchi",      "福神漬け": "fukujinzuke",
+  // デザート
+  "プリン": "pudding",     "ゼリー": "jelly",       "アイスクリーム": "ice_cream",
+  "アイス": "ice_cream",   "シャーベット": "sherbet","カステラ": "castella",
+  "どら焼き": "dorayaki",  "まんじゅう": "manju",   "ショートケーキ": "shortcake",
+  "ケーキ": "shortcake",
 };
 
 // ─── 自由入力パーサー ────────────────────────────────────

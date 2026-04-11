@@ -1,13 +1,13 @@
 "use client";
 
-import { useEffect, useRef, useState, Suspense } from "react";
+import { useEffect, useRef, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { FOODS } from "@/lib/foods";
 import { judgeMeal, calculateTotals, type MealItem } from "@/lib/judge";
-import { generateAdvice, generateProfessionalAdvice } from "@/lib/advice";
+import { generateDetailedAdvice } from "@/lib/advice";
 import { saveMealHistory, toDateStr } from "@/lib/storage";
 
-// ─── 判定ラベル・スタイル ────────────────────────────────
+// ─── 判定スタイル ─────────────────────────────────────────
 type Status = "ok" | "caution" | "ng";
 
 const STATUS_LABEL: Record<Status, string> = {
@@ -30,22 +30,27 @@ const VALUE_COLOR: Record<Status, string> = {
   caution: "text-yellow-600",
   ng:      "text-red-600",
 };
+const OVERALL_STYLE: Record<Status, string> = {
+  ok:      "bg-teal-50   border-teal-300   text-teal-800",
+  caution: "bg-yellow-50 border-yellow-300 text-yellow-800",
+  ng:      "bg-red-50    border-red-300    text-red-800",
+};
+const OVERALL_LABEL: Record<Status, string> = {
+  ok:      "よいバランスです",
+  caution: "少し調整できると安心です",
+  ng:      "気をつけたい内容です",
+};
 
-// ─── 栄養素カード ────────────────────────────────────────
+// ─── 栄養素バー ───────────────────────────────────────────
 function NutrientRow({
-  label,
-  value,
-  unit,
-  max,
-  status,
-  thresholds,
+  label, value, unit, max, status, thresholds,
 }: {
   label: string;
   value: number;
   unit: string;
   max: number;
   status: Status;
-  thresholds: [number, number]; // [ok, ng]
+  thresholds: [number, number];
 }) {
   const pct = Math.min((value / max) * 100, 100);
   return (
@@ -66,7 +71,6 @@ function NutrientRow({
           className={`h-full rounded-full transition-all ${BAR_COLOR[status]}`}
           style={{ width: `${pct}%` }}
         />
-        {/* 目安ライン */}
         <div
           className="absolute top-0 bottom-0 w-0.5 bg-gray-300"
           style={{ left: `${(thresholds[0] / max) * 100}%` }}
@@ -74,26 +78,27 @@ function NutrientRow({
       </div>
       <p className="text-xs text-gray-400">
         目標 {thresholds[0].toLocaleString()}{unit}以下
-        <span className="mx-1">／</span>
+        <span className="mx-1">/</span>
         上限 {thresholds[1].toLocaleString()}{unit}
       </p>
     </div>
   );
 }
 
-// タイムゾーンズレを防ぐローカルパース
+// ─── 日付フォーマット ─────────────────────────────────────
 function localDateLabel(dateStr: string) {
   const [y, m, d] = dateStr.split("-").map(Number);
-  return new Date(y, m - 1, d).toLocaleDateString("ja-JP", { month: "long", day: "numeric" });
+  return new Date(y, m - 1, d).toLocaleDateString("ja-JP", {
+    month: "long", day: "numeric",
+  });
 }
 
-// ─── 結果画面本体 ────────────────────────────────────────
+// ─── 結果画面本体 ─────────────────────────────────────────
 function ResultContent() {
   const router       = useRouter();
   const searchParams = useSearchParams();
-  const savedRef = useRef(false);
+  const savedRef     = useRef(false);
 
-  // decodeURIComponent handles both raw and percent-encoded URLs (e.g. %2C → ,)
   const foodsParam   = decodeURIComponent(searchParams.get("foods")   ?? "");
   const dateParam    =                    searchParams.get("date")    ?? toDateStr(new Date());
   const unknownParam = decodeURIComponent(searchParams.get("unknown") ?? "");
@@ -109,21 +114,12 @@ function ResultContent() {
       return food ? [{ food, amount }] : [];
     });
 
-  const totals = items.length > 0 ? calculateTotals(items) : null;
-  const result = items.length > 0 ? judgeMeal(items)      : null;
-  const advice    = result ? generateAdvice(result)             : null;
-  const proAdvice = result ? generateProfessionalAdvice(result) : null;
+  const totals        = items.length > 0 ? calculateTotals(items) : null;
+  const result        = items.length > 0 ? judgeMeal(items)        : null;
+  const detailedAdvice = result ? generateDetailedAdvice(result, items) : null;
 
-  const overallLabel = result?.overall === "ng"      ? "要注意"
-                     : result?.overall === "caution" ? "注意"
-                     : "良好";
-  const overallStyle = result?.overall === "ng"
-    ? "bg-red-50 border-red-300 text-red-700"
-    : result?.overall === "caution"
-      ? "bg-yellow-50 border-yellow-300 text-yellow-700"
-      : "bg-teal-50 border-teal-300 text-teal-700";
+  const overall = result?.overall ?? "ok";
 
-  // 自動保存（matched items がある場合のみ）
   useEffect(() => {
     if (savedRef.current || !result || !totals || items.length === 0) return;
     savedRef.current = true;
@@ -132,12 +128,11 @@ function ResultContent() {
       items:   items.map((i) => ({ name: i.food.name, foodId: i.food.id, amount: i.amount })),
       total:   totals,
       overall: result.overall,
-      advice:  proAdvice ?? undefined,
+      advice:  detailedAdvice?.summary ?? undefined,
     });
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // 栄養データなし＋未登録食品もなし → 選択画面へ
   if (items.length === 0 && unknownFoods.length === 0) {
     return (
       <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center gap-4 p-6">
@@ -149,6 +144,13 @@ function ResultContent() {
       </div>
     );
   }
+
+  const hasNutrientComments = detailedAdvice
+    ? Object.values(detailedAdvice.nutrients).some(Boolean)
+    : false;
+  const hasAdviceContent = hasNutrientComments
+    || (detailedAdvice?.combinations.length ?? 0) > 0
+    || (detailedAdvice?.nextSteps.length    ?? 0) > 0;
 
   return (
     <main className="min-h-screen bg-gray-50 pb-32">
@@ -173,7 +175,7 @@ function ResultContent() {
 
       <div className="mx-auto max-w-md px-4 py-5 space-y-4">
 
-        {/* ── 選んだ食品 ────────────────────────────────────── */}
+        {/* ── 選んだ食品 ──────────────────────────────────── */}
         <section className="bg-white rounded-2xl border shadow-sm p-4 space-y-2">
           {items.length > 0 && (
             <>
@@ -182,13 +184,15 @@ function ResultContent() {
                 {items.map((item, i) => (
                   <span key={i} className="inline-flex items-center bg-gray-100 text-gray-700 text-sm px-3 py-1 rounded-full">
                     {item.food.name}
+                    {item.amount !== 100 && (
+                      <span className="ml-1 text-gray-400 text-xs">{item.amount}g</span>
+                    )}
                   </span>
                 ))}
               </div>
             </>
           )}
 
-          {/* 未登録食品 */}
           {unknownFoods.length > 0 && (
             <div className={items.length > 0 ? "pt-2 border-t" : ""}>
               <p className="text-xs font-semibold text-gray-400 mb-1.5">
@@ -205,19 +209,19 @@ function ResultContent() {
           )}
         </section>
 
-        {/* ── 総合判定 ──────────────────────────────────────── */}
-        {result && (
-          <div className={`rounded-2xl border-2 p-5 text-center ${overallStyle}`}>
-            <p className="text-sm font-semibold mb-1 opacity-70">総合判定</p>
-            <p className="text-4xl font-bold tracking-wide">{overallLabel}</p>
+        {/* ── 総合評価 ────────────────────────────────────── */}
+        {result && detailedAdvice && (
+          <div className={`rounded-2xl border-2 p-5 ${OVERALL_STYLE[overall as Status]}`}>
+            <p className="text-xs font-semibold mb-1 opacity-60">総合評価</p>
+            <p className="text-xl font-bold mb-2">{OVERALL_LABEL[overall as Status]}</p>
+            <p className="text-sm leading-relaxed">{detailedAdvice.summary}</p>
           </div>
         )}
 
-        {/* ── 栄養素 詳細 ───────────────────────────────────── */}
+        {/* ── 栄養素の内訳 ─────────────────────────────────── */}
         {result && totals && (
           <section className="bg-white rounded-2xl border shadow-sm p-4 space-y-4">
             <p className="font-bold text-gray-800">栄養素の内訳</p>
-
             <NutrientRow
               label="水分"
               value={totals.water}
@@ -253,37 +257,90 @@ function ResultContent() {
           </section>
         )}
 
-        {/* ── アドバイス ────────────────────────────────────── */}
-        {advice && (
-          <section className="bg-white rounded-2xl border shadow-sm p-4 flex gap-3 items-start">
-            <span className="text-2xl flex-shrink-0 mt-0.5">💬</span>
-            <div>
-              <p className="text-xs font-bold text-gray-500 mb-1">アドバイス</p>
-              <p className="text-sm text-gray-700 leading-relaxed">{advice}</p>
-            </div>
+        {/* ── コメント・次の一歩 ────────────────────────────── */}
+        {detailedAdvice && hasAdviceContent && (
+          <section className="bg-white rounded-2xl border shadow-sm p-4 space-y-5">
+            <p className="font-bold text-gray-800">詳しいコメント</p>
+
+            {/* 栄養素ごとのコメント */}
+            {hasNutrientComments && (
+              <div className="space-y-4">
+                {detailedAdvice.nutrients.sodium && (
+                  <div className="space-y-1">
+                    <p className="text-xs font-bold text-gray-500">塩分について</p>
+                    <p className="text-sm text-gray-700 leading-relaxed">{detailedAdvice.nutrients.sodium}</p>
+                  </div>
+                )}
+                {detailedAdvice.nutrients.potassium && (
+                  <div className="space-y-1">
+                    <p className="text-xs font-bold text-gray-500">カリウムについて</p>
+                    <p className="text-sm text-gray-700 leading-relaxed">{detailedAdvice.nutrients.potassium}</p>
+                  </div>
+                )}
+                {detailedAdvice.nutrients.phosphorus && (
+                  <div className="space-y-1">
+                    <p className="text-xs font-bold text-gray-500">リンについて</p>
+                    <p className="text-sm text-gray-700 leading-relaxed">{detailedAdvice.nutrients.phosphorus}</p>
+                  </div>
+                )}
+                {detailedAdvice.nutrients.water && (
+                  <div className="space-y-1">
+                    <p className="text-xs font-bold text-gray-500">水分について</p>
+                    <p className="text-sm text-gray-700 leading-relaxed">{detailedAdvice.nutrients.water}</p>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* 組み合わせに注意 */}
+            {detailedAdvice.combinations.length > 0 && (
+              <div className="bg-amber-50 border border-amber-100 rounded-xl p-3 space-y-2">
+                <p className="text-xs font-bold text-amber-700">この食事の組み合わせについて</p>
+                {detailedAdvice.combinations.map((c, i) => (
+                  <p key={i} className="text-sm text-gray-700 leading-relaxed">{c}</p>
+                ))}
+              </div>
+            )}
+
+            {/* 次の一歩 */}
+            {detailedAdvice.nextSteps.length > 0 && (
+              <div className="space-y-2">
+                <p className="text-xs font-bold text-teal-700">次の食事での一歩</p>
+                <ul className="space-y-2">
+                  {detailedAdvice.nextSteps.map((step, i) => (
+                    <li key={i} className="flex gap-2 text-sm text-gray-700 leading-relaxed">
+                      <span className="text-teal-400 flex-shrink-0 mt-0.5">-</span>
+                      <span>{step}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
           </section>
         )}
 
-        {/* ── 専門アドバイス ────────────────────────────────── */}
-        {proAdvice && (
-          <section className="bg-amber-50 border border-amber-200 rounded-2xl p-4 flex gap-3 items-start">
-            <span className="text-2xl flex-shrink-0 mt-0.5">👩‍⚕️</span>
-            <div>
-              <p className="text-xs font-bold text-amber-700 mb-1">看護師からのアドバイス</p>
-              <p className="text-sm text-gray-700 leading-relaxed">{proAdvice}</p>
-            </div>
+        {/* ── 食事量が少ない場合の注意 ─────────────────────── */}
+        {detailedAdvice?.lowIntakeNote && (
+          <section className="bg-blue-50 border border-blue-200 rounded-2xl p-4 space-y-1">
+            <p className="text-xs font-bold text-blue-700">食事量について</p>
+            <p className="text-sm text-gray-700 leading-relaxed">{detailedAdvice.lowIntakeNote}</p>
           </section>
         )}
 
-        {/* ── 基準値の目安 ──────────────────────────────────── */}
-        <section className="bg-gray-50 border border-gray-200 rounded-2xl p-4">
-          <p className="text-xs font-bold text-gray-500 mb-2">1食あたりの目安（透析患者）</p>
-          <div className="grid grid-cols-2 gap-1.5 text-xs text-gray-600">
+        {/* ── 基準値の目安 + 免責 ──────────────────────────── */}
+        <section className="bg-gray-50 border border-gray-200 rounded-2xl p-4 space-y-3">
+          <p className="text-xs font-bold text-gray-500">1食あたりの目安（透析患者）</p>
+          <div className="grid grid-cols-2 gap-y-1 gap-x-4 text-xs text-gray-600">
             <span>水分：1500ml以下が目標</span>
             <span>塩分：700mg以下が目標</span>
             <span>カリウム：550mg以下が目標</span>
             <span>リン：220mg以下が目標</span>
           </div>
+          {detailedAdvice && (
+            <p className="text-xs text-gray-400 border-t border-gray-200 pt-3">
+              {detailedAdvice.disclaimer}
+            </p>
+          )}
         </section>
 
       </div>
@@ -312,7 +369,7 @@ function ResultContent() {
   );
 }
 
-// ─── Suspense ラッパー ───────────────────────────────────
+// ─── Suspense ラッパー ────────────────────────────────────
 export default function ResultPage() {
   return (
     <Suspense fallback={

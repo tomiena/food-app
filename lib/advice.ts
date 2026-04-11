@@ -1,86 +1,235 @@
-import type { JudgeResult } from "./judge";
+import type { JudgeResult, MealItem } from "./judge";
 
-export function generateAdvice(result: JudgeResult): string {
-  const { overall, sodium, potassium, phosphorus } = result;
+export type DetailedAdvice = {
+  summary: string;
+  nutrients: {
+    sodium?: string;
+    potassium?: string;
+    phosphorus?: string;
+    water?: string;
+  };
+  combinations: string[];
+  nextSteps: string[];
+  lowIntakeNote?: string;
+  disclaimer: string;
+};
 
+// ── 食品IDセット（組み合わせ検出用）────────────────────────
+const SOUP_IDS = new Set([
+  "miso_soup", "tonjiru", "clear_soup", "clear_soup_tofu", "osuimono",
+  "consomme_soup", "chicken_broth_soup", "egg_drop_soup", "egg_soup",
+  "harusame_soup", "kenchin_soup", "minestrone", "clam_chowder", "potage",
+  "corn_soup", "vegetable_soup",
+]);
+const PICKLE_IDS = new Set([
+  "takuan", "shibazuke", "umeboshi", "kimchi", "fukujinzuke",
+  "nozawana", "kyuri_tsuke", "hakusai_tsuke",
+]);
+const HIGH_SODIUM_PROCESSED = new Set([
+  "salted_salmon", "bacon", "sausage", "bento", "yakisoba", "ramen",
+]);
+const DAIRY_IDS = new Set([
+  "milk", "low_fat_milk", "cheese", "yogurt", "drinking_yogurt",
+  "cafe_au_lait", "milk_tea",
+]);
+const HIGH_K_IDS = new Set([
+  "spinach", "potato", "sweet_potato", "kabocha", "natto", "edamame",
+  "tomato_juice", "vegetable_juice", "veggie_smoothie", "wakame",
+]);
+
+// ── メイン関数 ────────────────────────────────────────────
+export function generateDetailedAdvice(
+  result: JudgeResult,
+  items: MealItem[],
+): DetailedAdvice {
+  const { overall, sodium, potassium, phosphorus, water } = result;
+  const ids = new Set(items.map((i) => i.food.id));
+
+  // ── 全体のひとこと ──────────────────────────────────────
+  let summary: string;
   if (overall === "ok") {
-    return "今日の食事はバランスが良いですね。このまま無理せず続けていきましょう。";
+    summary = "今回の食事はよいバランスです。この内容を参考に、次の食事も記録してみましょう。";
+  } else if (overall === "caution") {
+    const issues: string[] = [];
+    if (sodium.status    === "caution") issues.push("塩分");
+    if (potassium.status === "caution") issues.push("カリウム");
+    if (phosphorus.status === "caution") issues.push("リン");
+    if (water.status     === "caution") issues.push("水分");
+    summary = `${issues.join("・")}が少し多めでした。今回の内容を参考に、次の食事で少し意識するだけで十分です。`;
+  } else {
+    const ngList: string[] = [];
+    if (sodium.status    === "ng") ngList.push("塩分");
+    if (potassium.status === "ng") ngList.push("カリウム");
+    if (phosphorus.status === "ng") ngList.push("リン");
+    if (water.status     === "ng") ngList.push("水分");
+    summary = `${ngList.join("・")}に気をつけたい内容でした。一度で全部直そうとせず、まず一つだけ意識してみましょう。`;
   }
 
-  const ngIssues: string[] = [];
-  const cautionIssues: string[] = [];
-  if (sodium?.status === "ng")       ngIssues.push("塩分");
-  else if (sodium?.status === "caution") cautionIssues.push("塩分");
-  if (potassium?.status === "ng")    ngIssues.push("カリウム");
-  else if (potassium?.status === "caution") cautionIssues.push("カリウム");
-  if (phosphorus?.status === "ng")   ngIssues.push("リン");
-  else if (phosphorus?.status === "caution") cautionIssues.push("リン");
+  // ── 栄養素ごとのコメント ────────────────────────────────
+  const nutrients: DetailedAdvice["nutrients"] = {};
 
-  const allIssues = [...ngIssues, ...cautionIssues];
+  if (sodium.status === "ng") {
+    nutrients.sodium =
+      `塩分が${sodium.value}mgと多めでした。塩分が増えるとのどが渇き、飲水量や透析間の体重が増えやすくなります。` +
+      "汁物を半分残す、調味料を少し控えるだけで次の食事から調整できます。";
+  } else if (sodium.status === "caution") {
+    nutrients.sodium =
+      `塩分が${sodium.value}mgとやや多めでした。` +
+      "汁物を少し残す、漬物を小皿に抑えるなど、小さな工夫で調整できます。";
+  }
 
-  if (overall === "ng") {
-    if (allIssues.length >= 2) {
-      return "焦らず、次の食事では一つだけ気をつけることから始めてみましょう。あなたの努力は必ず体に届いています。";
+  if (potassium.status === "ng") {
+    nutrients.potassium =
+      `カリウムが${potassium.value}mgと多めでした。` +
+      "いも類・果物・野菜ジュース・海藻類が重なりやすい組み合わせです。" +
+      "野菜はゆでてから食べると、カリウムを30〜40%減らせます（ゆで汁は捨ててください）。";
+  } else if (potassium.status === "caution") {
+    nutrients.potassium =
+      `カリウムが${potassium.value}mgとやや高めでした。` +
+      "野菜をゆでこぼすだけで効果的に減らせます。生野菜サラダをおひたしに変えるだけでも違います。";
+  }
+
+  if (phosphorus.status === "ng") {
+    nutrients.phosphorus =
+      `リンが${phosphorus.value}mgと多めでした。` +
+      "乳製品・加工肉・練り製品・缶詰が重なると高くなりやすいです。" +
+      "リン吸着薬が処方されている場合は、食事と一緒にしっかり服用することが大切です。";
+  } else if (phosphorus.status === "caution") {
+    nutrients.phosphorus =
+      `リンが${phosphorus.value}mgとやや多めでした。` +
+      "乳製品や加工食品が続くと重なりやすくなります。";
+  }
+
+  if (water.status === "ng") {
+    nutrients.water =
+      `水分が${water.value}mlと多めでした。` +
+      "飲み物だけでなく、汁物・ゼリー・果物にも水分が含まれます。" +
+      "一度にまとめて飲むより、少量ずつ分けて摂ると体への負担が軽くなります。";
+  } else if (water.status === "caution") {
+    nutrients.water =
+      `水分が${water.value}mlとやや多めでした。` +
+      "汁物やゼリーの水分も合算されていることを意識してみましょう。";
+  }
+
+  // ── 組み合わせコメント ──────────────────────────────────
+  const combinations: string[] = [];
+
+  const hasSoup    = [...ids].some((id) => SOUP_IDS.has(id));
+  const hasPickle  = [...ids].some((id) => PICKLE_IDS.has(id));
+  const hasRamen   = ids.has("ramen");
+  const hasMiso    = ids.has("miso_soup") || ids.has("tonjiru");
+  const hasSaltedSalmon = ids.has("salted_salmon");
+  const hasBaconOrSausage = ids.has("bacon") || ids.has("sausage");
+  const hasHighSodiumProcessed = [...ids].some((id) => HIGH_SODIUM_PROCESSED.has(id));
+  const dairyCount = [...ids].filter((id) => DAIRY_IDS.has(id)).length;
+  const highKCount = [...ids].filter((id) => HIGH_K_IDS.has(id)).length;
+
+  if (hasRamen && hasPickle) {
+    combinations.push(
+      "ラーメンと漬物の組み合わせは塩分が重なりやすいです。ラーメンは汁を残すだけで塩分を大きく減らせます。"
+    );
+  } else if (hasSoup && hasPickle) {
+    combinations.push(
+      "汁物と漬物が重なっています。どちらかを控えめにするだけで塩分を調整しやすくなります。"
+    );
+  }
+
+  if (hasSaltedSalmon && (hasMiso || hasPickle)) {
+    combinations.push(
+      "塩鮭は塩分が多めの食材です。味噌汁や漬物と組み合わせると塩分が重なりやすいので、汁物を薄めにするか汁を残しましょう。"
+    );
+  }
+
+  if (hasBaconOrSausage && hasMiso) {
+    combinations.push(
+      "加工肉（ベーコン・ソーセージ）と味噌汁が重なると塩分とリンが高くなりやすいです。"
+    );
+  }
+
+  if (hasHighSodiumProcessed && hasPickle && !hasRamen) {
+    combinations.push(
+      "加工食品と漬物が重なっています。どちらかを控えめにすると塩分を調整しやすいです。"
+    );
+  }
+
+  if (dairyCount >= 2) {
+    combinations.push(
+      "乳製品が複数含まれています。重なるとリンが高くなりやすいので、1食に1種類を目安にしましょう。"
+    );
+  }
+
+  if (highKCount >= 2) {
+    combinations.push(
+      "カリウムの高い食材（いも類・野菜ジュース・海藻類など）が重なっています。組み合わせに気をつけると安心です。"
+    );
+  }
+
+  // ── 次の一歩 ────────────────────────────────────────────
+  const nextSteps: string[] = [];
+
+  if (sodium.status !== "ok") {
+    if (hasRamen) {
+      nextSteps.push("ラーメンの汁を半分以上残すことを次回から意識してみましょう。");
+    } else if (hasMiso || hasSoup) {
+      nextSteps.push("次の食事では汁物を半分残すことを意識してみましょう。");
+    } else if (hasPickle) {
+      nextSteps.push("漬物は小皿にすると塩分を調整しやすいです。");
+    } else {
+      nextSteps.push("醤油やソースは小匙で量を確認するようにすると調整しやすくなります。");
     }
-    if (ngIssues.includes("塩分")) {
-      return "塩分がかなり多い食事です。汁物を残したり、調味料を控えめにすることで体への負担を減らせます。次の食事で意識してみてください。";
-    }
-    if (ngIssues.includes("カリウム")) {
-      return "カリウムが高めです。バナナ・いも類・生野菜は控え、野菜は必ず茹でてから食べるようにしましょう。";
-    }
-    if (ngIssues.includes("リン")) {
-      return "リンが高めです。乳製品・加工食品・ナッツ類には特に多く含まれます。食材を選ぶときに少し意識してみてください。";
+  }
+
+  if (potassium.status !== "ok") {
+    nextSteps.push(
+      "野菜はゆでてから食べましょう。ゆで汁は捨てることでカリウムが減ります。"
+    );
+  }
+
+  if (phosphorus.status !== "ok") {
+    nextSteps.push(
+      "乳製品・加工食品の量を少し減らすと、リンを調整しやすくなります。"
+    );
+  }
+
+  if (water.status !== "ok") {
+    nextSteps.push("飲み物はコップ半分を意識すると、水分管理がしやすくなります。");
+    if (hasSoup) {
+      nextSteps.push("汁物の汁を残すことで、水分と塩分をまとめて減らせます。");
     }
   }
 
-  // caution
-  if (allIssues.length >= 2) {
-    return "いくつかの栄養素が少し多めです。一度に全部直そうとせず、まず塩分から少しずつ意識してみましょう。";
-  }
-  if (cautionIssues.includes("塩分") || ngIssues.includes("塩分")) {
-    return "塩分が少し多めです。汁物を残したり、調味料を控えめにすると体がぐっと楽になりますよ。";
-  }
-  if (cautionIssues.includes("カリウム") || ngIssues.includes("カリウム")) {
-    return "カリウムが少し高めです。野菜は茹でこぼしをするだけでぐっと減らせます。";
-  }
-  if (cautionIssues.includes("リン") || ngIssues.includes("リン")) {
-    return "リンが少し多めです。加工食品や乳製品を少し控えると改善しやすくなります。";
+  if (overall === "ok" && nextSteps.length === 0) {
+    nextSteps.push("今回のバランスを参考に、引き続き記録を続けましょう。");
   }
 
-  return "今日も記録できました。続けることが大切です。";
+  // ── 食事量が少ない場合の注意 ────────────────────────────
+  let lowIntakeNote: string | undefined;
+  const totalWeight = items.reduce((sum, i) => sum + i.amount, 0);
+  if (totalWeight > 0 && totalWeight < 100) {
+    lowIntakeNote =
+      "食事量が少なめのようです。制限を頑張りすぎていないか、食欲や体調もあわせて確認してみましょう。" +
+      "食事量が少ない日が続くと、体力の低下や貧血につながることがあります。";
+  }
+
+  const disclaimer =
+    "個別の栄養目標や食事管理の詳細は、主治医・透析施設の方針を優先してください。";
+
+  return { summary, nutrients, combinations, nextSteps, lowIntakeNote, disclaimer };
+}
+
+// ── 後方互換（storageへの保存用途など）─────────────────────
+export function generateAdvice(result: JudgeResult): string {
+  if (result.overall === "ok") {
+    return "今回の食事はよいバランスです。この調子で続けましょう。";
+  }
+  const issues: string[] = [];
+  if (result.sodium.status    !== "ok") issues.push("塩分");
+  if (result.potassium.status !== "ok") issues.push("カリウム");
+  if (result.phosphorus.status !== "ok") issues.push("リン");
+  if (result.water.status     !== "ok") issues.push("水分");
+  return `${issues.join("・")}が多めでした。次の食事で少し意識してみましょう。`;
 }
 
 export function generateProfessionalAdvice(result: JudgeResult): string {
-  const { overall, sodium, potassium, phosphorus } = result;
-
-  if (overall === "ok") {
-    return "今回の食事内容はナトリウム・カリウム・リンのいずれも目標範囲内に収まっています。透析患者さんにとって食事管理は治療の一部です。この調子で毎食の記録を続け、体調の変化を主治医や栄養士に共有しましょう。";
-  }
-
-  if (overall === "ng") {
-    if (sodium.status === "ng" && potassium.status === "ng") {
-      return `塩分（${sodium.value}mg）とカリウム（${potassium.value}mg）がともに基準を超えています。汁物を半分残す・野菜は必ず茹でこぼすだけで大きく改善できます。次の食事から一つずつ取り組んでみてください。`;
-    }
-    if (sodium.status === "ng") {
-      return `今回の塩分は${sodium.value}mgで1食の目安700mgを超えています。塩分過多は口渇・体重増加・血圧上昇につながります。汁物を残す・醤油や味噌を控えるだけで改善できます。次の食事で意識してみましょう。`;
-    }
-    if (potassium.status === "ng") {
-      return `カリウムが${potassium.value}mgと基準を超えています。カリウムの蓄積は不整脈のリスクを高めます。いも類・バナナ・生野菜を控え、野菜は必ず茹でてから食べることでカリウムを効果的に減らせます。`;
-    }
-    if (phosphorus.status === "ng") {
-      return `リンが${phosphorus.value}mgと基準を超えています。リンの蓄積は骨や血管に悪影響を与えます。乳製品・加工食品・ナッツ類を控え、リン吸着薬を処方されている場合は食事と一緒に服用しましょう。`;
-    }
-  }
-
-  if (sodium.status === "caution") {
-    return `塩分が${sodium.value}mgとやや多めです。汁物を半分残す・漬物を控えるなど小さな工夫を積み重ねることが体の負担を減らします。透析間の体重増加が気になる場合は特に意識してみてください。`;
-  }
-  if (potassium.status === "caution") {
-    return `カリウムが${potassium.value}mgとやや高めです。野菜の茹でこぼし（ゆで汁は捨てる）を習慣にするだけで30〜40%減らせます。生野菜サラダをおひたしに変えるだけでも効果的です。`;
-  }
-  if (phosphorus.status === "caution") {
-    return `リンが${phosphorus.value}mgとやや高めです。チーズ・牛乳・加工食品に多く含まれます。リン吸着薬を処方されている場合は毎食しっかり服用することが重要です。次回の採血でリン値を確認しましょう。`;
-  }
-
-  return "今回の食事内容を記録しました。継続的な記録が体調管理の第一歩です。気になる点は次回の受診時に栄養士にご相談ください。";
+  return generateAdvice(result);
 }

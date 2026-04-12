@@ -2,10 +2,10 @@
   "name": "透析食事チェック",
   "short_name": "透析食事チェック",
   "description": "透析患者のための食事管理アプリ",
-  "start_url": "/",
+  "start_url": "/lp",
   "display": "standalone",
   "background_color": "#ffffff",
-  "theme_color": "#16a34a",
+  "theme_color": "#e53935",
   "icons": [
     {
       "src": "/icons/icon-192.png",

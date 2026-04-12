@@ -18,7 +18,7 @@ async function handleCheckout() {
 }
 
 // ─── 再利用パーツ ─────────────────────────────────────────
-function CtaButton({ label = "今すぐ無料で試す" }: { label?: string }) {
+function CtaButton({ label = "今すぐ試す" }: { label?: string }) {
   return (
     <Link
       href="/"
@@ -78,12 +78,12 @@ export default function LP() {
           </h1>
 
           <p className="text-gray-500 leading-relaxed text-base">
-            食べたものを選ぶだけで、
+            食材を選ぶだけで、
             <br />
-            栄養バランスをすぐに確認できます。
+            必要な栄養バランスをひと目で確認できます。
           </p>
 
-          <CtaButton label="今すぐ無料で試す" />
+          <CtaButton label="今すぐ試す" />
           <p className="text-xs text-gray-400">登録不要・アプリインストール不要</p>
         </div>
       </section>
@@ -102,9 +102,9 @@ export default function LP() {
 
           <ul className="space-y-3">
             {[
-              "食べてから不安になる",
-              "調べてもよく分からない",
-              "毎回考えるのがしんどい",
+              "何を食べていいか分からない",
+              "この食事は大丈夫だろうか",
+              "計算が難しくて続かない",
             ].map((text) => (
               <li
                 key={text}
@@ -362,9 +362,9 @@ export default function LP() {
           <p className="text-gray-500 text-sm leading-relaxed">
             登録不要・無料ですぐに始められます。
           </p>
-          <CtaButton label="今すぐ無料で始める" />
+          <CtaButton label="今すぐ試す" />
           <p className="text-xs text-gray-400">
-            ※栄養目標の個別設定は主治医・透析施設の方針を優先してください。
+            本アプリは食事管理を支援するツールであり、医師や管理栄養士の指導に代わるものではありません。治療・食事制限については必ず医療専門職にご相談ください。
           </p>
         </div>
       </section>

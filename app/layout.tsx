@@ -36,7 +36,7 @@ export default function RootLayout({
     >
       <head>
         <meta name="theme-color" content="#16a34a" />
-        <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
+        <link rel="apple-touch-icon" href="/icons/apple-touch-icon-v2.png" />
       </head>
       <body className="min-h-full flex flex-col">{children}</body>
     </html>

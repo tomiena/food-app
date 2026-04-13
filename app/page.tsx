@@ -47,21 +47,38 @@ function getWeightAdvice(
   rate: number,
   interval: "1" | "2",
   weight: number,
+  bowelStatus: "normal" | "constipated" | "none" = "normal",
+  edema = false,
+  dyspnea = false,
 ): { status: "ok" | "caution" | "ng"; message: string } {
   const threshold = interval === "1" ? 3 : 5;
-  const isSmall   = weight < 45;
+  void weight; // 将来の拡張用に保持
 
   if (gain < -1) {
     return { status: "caution", message: "食事量が落ちていないか確認しましょう。" };
   }
-  const eff = isSmall ? threshold + 1 : threshold;
-  if (rate > eff) {
-    return { status: "ng", message: "体重が増えています。飲水量と塩分を控えめに。むくみや息苦しさがあれば施設へご連絡ください。" };
+
+  let status: "ok" | "caution" | "ng" = "ok";
+  let message = "";
+
+  if (rate <= threshold) {
+    status = "ok";
+    message = "ドライウェイトを基準にみると、体重増加は目安の範囲内です。このまま飲水量・塩分・食事量のバランスを意識して続けましょう。";
+  } else {
+    status = "caution";
+    message = "ドライウェイトを基準にみると、体重増加がやや多めです。飲水量や塩分だけでなく、食事量や排便状況の影響で増えることがあります。";
   }
-  if (rate > threshold * 0.7) {
-    return { status: "caution", message: "やや増加気味です。飲み物の量に気をつけましょう。" };
+
+  if (bowelStatus !== "normal") {
+    message += " 便秘が続いている場合は、その影響で体重が増えることがあります。排便状況も確認しましょう。";
   }
-  return { status: "ok", message: "体重管理ができています。" };
+
+  if (edema || dyspnea) {
+    status = "ng";
+    message += " むくみや息苦しさがある場合は注意が必要です。次回透析を待たず、医療機関へ相談してください。";
+  }
+
+  return { status, message };
 }
 
 // ─── 今日のひとこと（ステータスカード内に統合）───────────
@@ -103,6 +120,9 @@ export default function HomePage() {
   const [editDryWeight,     setEditDryWeight]     = useState("");
   const [editDrinkWater,    setEditDrinkWater]    = useState("");
   const [editInterval,      setEditInterval]      = useState<"1" | "2">("1");
+  const [bowelStatus, setBowelStatus] = useState<"normal" | "constipated" | "none">("normal");
+  const [edema,       setEdema]       = useState(false);
+  const [dyspnea,     setDyspnea]     = useState(false);
 
   // 展開中のサブフォーム: null | "vitals" | "weight"
   const [openForm, setOpenForm] = useState<null | "vitals" | "weight">(null);
@@ -163,7 +183,7 @@ export default function HomePage() {
     : null;
   const weightAdvice =
     hasWeightData && weightGain !== null && weightRate !== null
-      ? getWeightAdvice(weightGain, weightRate, dialysisInterval, todayWeight!)
+      ? getWeightAdvice(weightGain, weightRate, dialysisInterval, todayWeight!, bowelStatus, edema, dyspnea)
       : null;
 
   const tip = getDailyTip(todayMeals, todayTotal);
@@ -436,6 +456,28 @@ export default function HomePage() {
                     <option value="1">1日空き</option>
                     <option value="2">2日空き</option>
                   </select>
+                </label>
+              </div>
+              <label className="space-y-1">
+                <span className="text-xs font-medium text-gray-500">排便状況</span>
+                <select value={bowelStatus}
+                  onChange={(e) => setBowelStatus(e.target.value as "normal" | "constipated" | "none")}
+                  className="w-full rounded-xl border border-gray-200 px-3 py-3 text-base bg-white focus:outline-none focus:ring-2 focus:ring-teal-300">
+                  <option value="normal">あり（通常）</option>
+                  <option value="constipated">便秘</option>
+                  <option value="none">なし</option>
+                </select>
+              </label>
+              <div className="flex gap-4 items-center pt-1">
+                <label className="flex items-center gap-2 text-sm text-gray-600">
+                  <input type="checkbox" checked={edema} onChange={(e) => setEdema(e.target.checked)}
+                    className="w-4 h-4 accent-teal-600" />
+                  むくみ
+                </label>
+                <label className="flex items-center gap-2 text-sm text-gray-600">
+                  <input type="checkbox" checked={dyspnea} onChange={(e) => setDyspnea(e.target.checked)}
+                    className="w-4 h-4 accent-teal-600" />
+                  息苦しさ
                 </label>
               </div>
               <button type="button" onClick={handleSaveWeight}

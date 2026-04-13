@@ -170,6 +170,13 @@ export default function MealRecorder({ stickyOffset = 57 }: { stickyOffset?: num
       : "ok";
   }
 
+  const handleBackToToday = () => {
+    const t = new Date();
+    setCalYear(t.getFullYear());
+    setCalMonth(t.getMonth() + 1);
+    setSelectedDate(today);
+  };
+
   const daysInMonth  = new Date(calYear, calMonth, 0).getDate();
   const firstWeekday = new Date(calYear, calMonth - 1, 1).getDay();
   const prevMonth = () => {
@@ -309,10 +316,18 @@ export default function MealRecorder({ stickyOffset = 57 }: { stickyOffset?: num
               ‹
             </button>
             <p className="font-bold text-gray-700">{calYear}年{calMonth}月</p>
-            <button type="button" onClick={nextMonth} aria-label="次の月"
-              className="w-9 h-9 flex items-center justify-center rounded-full hover:bg-gray-100 text-gray-500 text-xl">
-              ›
-            </button>
+            <div className="flex items-center gap-1">
+              {(calYear !== new Date().getFullYear() || calMonth !== new Date().getMonth() + 1) && (
+                <button type="button" onClick={handleBackToToday}
+                  className="rounded-full border border-teal-400 px-3 py-0.5 text-xs text-teal-600 bg-white hover:bg-teal-50">
+                  当日表示
+                </button>
+              )}
+              <button type="button" onClick={nextMonth} aria-label="次の月"
+                className="w-9 h-9 flex items-center justify-center rounded-full hover:bg-gray-100 text-gray-500 text-xl">
+                ›
+              </button>
+            </div>
           </div>
           <div className="grid grid-cols-7 text-center">
             {WEEKDAYS.map((d, i) => (

@@ -98,8 +98,8 @@ function getDailyTip(
 }
 
 // ─── ヘッダー高さ（MealRecorder の sticky オフセット）────
-// py-4(32px) + text-xl 行高(28px) + text-xs 行高(16px) ≈ 76px
-const HOME_HEADER_HEIGHT = 76;
+// py-4(32px) + text-xl 行高(28px) + text-xs 行高(16px) × 2行 ≈ 92px
+const HOME_HEADER_HEIGHT = 92;
 
 const ADVICE_BG: Record<string, string> = {
   ok:      "bg-teal-50 text-teal-700",
@@ -194,7 +194,8 @@ export default function HomePage() {
       {/* ── ヘッダー ─────────────────────────────────────── */}
       <header className="bg-white border-b px-5 py-4 sticky top-0 z-20 shadow-sm">
         <div className="mx-auto max-w-md">
-          <h1 className="text-xl font-bold text-gray-800">食事チェック</h1>
+          <h1 className="text-xl font-bold text-gray-800">🍱 食事チェック</h1>
+          <p className="text-xs text-teal-600">食べ物をタップして選んでください</p>
           <p className="text-xs text-gray-400">{todayLabel()}</p>
         </div>
       </header>

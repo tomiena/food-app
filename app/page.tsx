@@ -502,7 +502,7 @@ export default function HomePage() {
       {/* ── 記録エリア区切り ──────────────────────────────── */}
       <div className="border-t-4 border-gray-200">
         <p className="text-sm font-bold text-gray-500 px-5 pt-3 pb-1 mx-auto max-w-md">
-          食事を記録する
+          今日の食事を記録する🍽️
         </p>
       </div>
 

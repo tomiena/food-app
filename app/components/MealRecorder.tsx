@@ -147,6 +147,8 @@ export default function MealRecorder({ stickyOffset = 57 }: { stickyOffset?: num
 
   const [mode, setMode]               = useState<Mode>("select");
   const [selectedDate, setSelectedDate] = useState(today);
+  const isPastDay     = selectedDate < today;
+  const isFreePastDay = !getIsPremium() && isPastDay;
   const [calYear,  setCalYear]  = useState(() => new Date().getFullYear());
   const [calMonth, setCalMonth] = useState(() => new Date().getMonth() + 1);
   const [activeCategory, setActiveCategory] = useState<CategoryId>("all");
@@ -235,6 +237,7 @@ export default function MealRecorder({ stickyOffset = 57 }: { stickyOffset?: num
 
   const handleSaveSelect = () => {
     if (portionMap.size === 0) return;
+    if (isFreePastDay) { setShowFreeLimit(true); return; }
     const isPremium = getIsPremium();
     const dayCount  = history.filter((m) => m.date === selectedDate).length;
     if (!isPremium && dayCount >= FREE_MEAL_LIMIT) { setShowFreeLimit(true); return; }
@@ -266,6 +269,7 @@ export default function MealRecorder({ stickyOffset = 57 }: { stickyOffset?: num
   const handleSaveFree = () => {
     const { matched, unknown } = parseFreeInput(freeText);
     if (matched.length === 0 && unknown.length === 0) return;
+    if (isFreePastDay) { setShowFreeLimit(true); return; }
     const isPremium = getIsPremium();
     const dayCount  = history.filter((m) => m.date === selectedDate).length;
     if (!isPremium && dayCount >= FREE_MEAL_LIMIT) { setShowFreeLimit(true); return; }

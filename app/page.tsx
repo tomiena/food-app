@@ -247,7 +247,7 @@ export default function HomePage() {
               )}
             </>
           ) : (
-            <p className="text-sm text-gray-400 text-center py-2">まだ記録がありません</p>
+            <p className="text-sm text-gray-400 text-center py-2">下から食べたものを選んで記録しましょう🍽️</p>
           )}
         </section>
 

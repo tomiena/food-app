@@ -326,6 +326,7 @@ export default function MealRecorder({ stickyOffset = 57 }: { stickyOffset?: num
               {formatDateJP(selectedDate)}
             </span>
           </div>
+          <p className="text-sm text-teal-600 mt-1">下のボタンから食事を記録できます👇️</p>
           <div className="flex items-center justify-between">
             <button type="button" onClick={prevMonth} aria-label="前の月"
               className="w-9 h-9 flex items-center justify-center rounded-full hover:bg-gray-100 text-gray-500 text-xl">

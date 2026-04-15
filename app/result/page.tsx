@@ -6,6 +6,7 @@ import { FOODS } from "@/lib/foods";
 import { judgeMeal, calculateTotals, type MealItem } from "@/lib/judge";
 import { generateDetailedAdvice } from "@/lib/advice";
 import { toDateStr } from "@/lib/storage";
+import { getIsPremium } from "@/lib/premium";
 
 // ─── 判定スタイル ─────────────────────────────────────────
 type Status = "ok" | "caution" | "ng";
@@ -131,6 +132,18 @@ function ResultContent() {
     );
   }
 
+  if (!getIsPremium() && dateParam < toDateStr(new Date())) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center gap-4 p-6">
+        <p className="text-gray-500 text-center">過去日の栄養評価は<br />プレミアムで利用できます</p>
+        <button type="button" onClick={() => router.push("/")}
+          className="rounded-xl bg-teal-600 px-6 py-3 text-white font-semibold">
+          ホームへ戻る
+        </button>
+      </div>
+    );
+  }
+
   const hasNutrientComments = detailedAdvice
     ? Object.values(detailedAdvice.nutrients).some(Boolean)
     : false;
@@ -235,8 +248,8 @@ function ResultContent() {
 
         {/* ── コメント・次の一歩 ────────────────────────────── */}
         {detailedAdvice && hasAdviceContent && (
-          <section className="bg-white rounded-2xl border shadow-sm p-4 space-y-5">
-            <p className="font-bold text-gray-800">詳しいコメント</p>
+          <section className="bg-amber-50 rounded-2xl border border-amber-200 shadow-sm p-4 space-y-5">
+            <p className="font-bold text-amber-800">💬アドバイス</p>
 
             {/* 栄養素ごとのコメント */}
             {hasNutrientComments && (

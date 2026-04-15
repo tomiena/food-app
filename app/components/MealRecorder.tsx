@@ -302,6 +302,22 @@ export default function MealRecorder({ stickyOffset = 57 }: { stickyOffset?: num
 
       <div className="mx-auto max-w-md px-4 pt-4 space-y-4">
 
+        {/* ── モード切り替えタブ ──────────────────────────────── */}
+        <div className="flex gap-1 p-1 bg-gray-100 rounded-xl">
+          <button type="button" onClick={() => setMode("select")}
+            className={`flex-1 py-2.5 text-sm font-semibold rounded-lg transition-all ${
+              mode === "select" ? "bg-teal-600 text-white shadow-sm" : "bg-white border border-teal-500 text-teal-600"
+            }`}>
+            食材を選ぶ
+          </button>
+          <button type="button" onClick={() => setMode("free")}
+            className={`flex-1 py-2.5 text-sm font-semibold rounded-lg transition-all ${
+              mode === "free" ? "bg-teal-600 text-white shadow-sm" : "bg-white border border-teal-500 text-teal-600"
+            }`}>
+            自由入力する
+          </button>
+        </div>
+
         {/* ── カレンダー ────────────────────────────────────── */}
         <section className="bg-white rounded-2xl border shadow-sm p-4 space-y-3">
           <div className="flex items-center justify-between">
@@ -370,22 +386,6 @@ export default function MealRecorder({ stickyOffset = 57 }: { stickyOffset?: num
             ))}
           </div>
         </section>
-
-        {/* ── モード切り替えタブ ──────────────────────────────── */}
-        <div className="flex gap-1 p-1 bg-gray-100 rounded-xl">
-          <button type="button" onClick={() => setMode("select")}
-            className={`flex-1 py-2.5 text-sm font-semibold rounded-lg transition-all ${
-              mode === "select" ? "bg-teal-600 text-white shadow-sm" : "bg-white border border-teal-500 text-teal-600"
-            }`}>
-            食材を選ぶ
-          </button>
-          <button type="button" onClick={() => setMode("free")}
-            className={`flex-1 py-2.5 text-sm font-semibold rounded-lg transition-all ${
-              mode === "free" ? "bg-teal-600 text-white shadow-sm" : "bg-white border border-teal-500 text-teal-600"
-            }`}>
-            自由入力する
-          </button>
-        </div>
 
         {/* ── 自由入力フォーム ──────────────────────────────── */}
         {mode === "free" && (
